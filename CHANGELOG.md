@@ -55,3 +55,23 @@ This release establishes the formal initial baseline for Atlas Engineering Patte
 - Refined capability fulfillment in `retrievalEngine.ts` to require exact tag or textual substring matches, preventing generic words like "telemetry" from falsely satisfying specialized queries (e.g. "quantum hall probe telemetry").
 - Calibrated duplicate detection threshold in `ingestionEngine.ts` to recognize title similarity $\ge 60\%$ or composite similarity $\ge 45\%$.
 - Updated `package.json` with project name `atlas-engineering-patterns` and `npm test` script.
+
+---
+
+## [1.1.0] - 2026-10-19
+
+### SOL-2 Epistemic Integration & Deterministic Reasoning Anchor (DRA)
+
+#### Added
+- **SOL-2 Epistemic Discipline (`src/atlas/types.ts`, `src/atlas/retrievalEngine.ts`)**:
+  - Separation of heuristic relevance matches from formal verified capability coverage (`HEURISTIC_MATCH_ONLY`, `VERIFIED_CAPABILITY`).
+  - Epistemic Loss Ledger (`lossLog`) tracking `UNMET_REQUIREMENT`, `EXCLUDED_CANDIDATE`, `UNVERIFIED_CONNECTION`, `HEURISTIC_MATCH_ONLY`, and `HEURISTIC_MISMATCH`.
+  - Robust `validationStatus` calculation ensuring that knowledge gaps, unverified connections (`UNKNOWN`), active conflicts (`CONFLICT`), or heuristic-only matches force `UNVERIFIED` rather than false `COMPATIBLE`.
+- **Deterministic Reasoning Anchor (DRA) Pattern (`src/atlas/canonicalData.ts`, `docs/PATTERN_DRA.md`)**:
+  - Added canonical pattern `pat-deterministic-reasoning-anchor` modeling autonomous problem fragment recognition, applicability decisions with intentional abstention, semantic projection, deterministic operation, epistemic separation (`TOOL_VERIFIED_FACT` vs `AGENT_INTERPRETATION` vs `AGENT_HYPOTHESIS`), and reasoning updates.
+- **Enhanced Test Suites (`tests/epistemicLoss.test.ts`, `tests/audit.test.ts`)**:
+  - Expanded test coverage to 25 automated assertions (17 audit tests + 8 epistemic loss tests).
+  - Explicit test coverage for `HEURISTIC_MATCH_ONLY` loss logging and forced `UNVERIFIED` validation status.
+- **Documentation Alignment (`docs/`)**:
+  - Synchronized canonical entity count to 53 across all documentation files.
+  - Added dedicated `docs/PATTERN_DRA.md` architecture guide.

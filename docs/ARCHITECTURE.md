@@ -52,12 +52,12 @@ The architecture decouples:
 
 ### 3.1 Canonical Data Layer (`src/atlas/canonicalData.ts`)
 
-The canonical data layer is the single source of truth for all established engineering knowledge in the repository. It defines 23 vetted records across five distinct entity types:
-- **8 Primitives (`prim-*`)**: Scrolling time-series strip, calibrated gauge dial, emergency e-stop banner, bounded numeric stepper, coordinate crosshair canvas, state annunciator matrix, asymmetric split console layout, and multichannel spectrographic waterfall.
-- **6 Patterns (`pat-*`)**: Calibrated multi-sensor telemetry console, guided student experiment stepper, high-rate signal inspection, dual-operator safety interlock, multi-screen synced overview/drilldown console, and graceful hardware drift alerting.
-- **3 Stand Configurations (`cfg-*`)**: Subsonic educational wind tunnel, continuous research chemostat bioreactor, and pulsed high-voltage testbed.
-- **3 Implementations (`impl-*`)**: React 19 / Canvas 2D telemetry client, embedded Qt/QML touch client, and Qt 6 C++ interlocked console.
-- **3 Evidence Records (`evid-*`)**: ISO 9241-110 ergonomic display study, 3-semester university aerospace student trial (n=420), and 3,400-cycle high-energy stand operational safety survey.
+The canonical data layer is the single source of truth for all established engineering knowledge in the repository. It defines 53 vetted records across five distinct entity types:
+- **Primitives (`prim-*`)**: Scrolling time-series strips, calibrated gauge dials, emergency e-stop banners, bounded numeric steppers, coordinate crosshair canvases, state annunciator matrices, asymmetric split console layouts, and multichannel spectrographic waterfalls.
+- **Patterns (`pat-*`)**: Calibrated multi-sensor telemetry consoles, guided student experiment steppers, high-rate signal inspections, dual-operator safety interlocks, multi-screen synced overview/drilldown consoles, graceful hardware drift alerting, consistent editor anatomy, and Deterministic Reasoning Anchor (DRA).
+- **Stand Configurations (`cfg-*`)**: Subsonic educational wind tunnels, continuous research chemostat bioreactors, and pulsed high-voltage testbeds.
+- **Implementations (`impl-*`)**: React 19 / Canvas 2D telemetry clients, embedded Qt/QML touch clients, and Qt 6 C++ interlocked consoles.
+- **Evidence Records (`evid-*`)**: ISO 9241-110 ergonomic display studies, university student trials, safety audits, and interface architecture analyses.
 
 Each record is validated against strict TypeScript interfaces in `src/atlas/types.ts`.
 

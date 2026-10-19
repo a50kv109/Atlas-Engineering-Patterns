@@ -5,7 +5,7 @@
 import { RetrievalEngine } from '../src/atlas/retrievalEngine';
 import { KnowledgeGraph } from '../src/atlas/graphEngine';
 import { ALL_CANONICAL_ENTITIES } from '../src/atlas/canonicalData';
-import { Contract, StandRequirementQuery } from '../src/atlas/types';
+import { StandRequirementQuery } from '../src/atlas/types';
 
 function runEpistemicTests() {
   console.log('================================================================');
@@ -64,12 +64,16 @@ function runEpistemicTests() {
   assert(solGap.lossLog?.some(l => l.type === 'EXCLUDED_CANDIDATE') ?? false, 'Test 6: Excluded candidates correctly logged in lossLog');
 
   // Test 7: Separation of heuristic matches from verified capabilities (HEURISTIC_MATCH_ONLY)
-  // If we query a capability that matches an unverified/proposed entity or test it against heuristic match only, it should yield HEURISTIC_MATCH_ONLY in lossLog and force UNVERIFIED status.
-  const queryHeuristic = {
+  // If a requirement matches an entity that is PROPOSED/SPECIFIED without verified evidence,
+  // it must register HEURISTIC_MATCH_ONLY in lossLog and force UNVERIFIED validation status.
+  const graph = new KnowledgeGraph(ALL_CANONICAL_ENTITIES);
+  const retrievalWithGraph = new RetrievalEngine(graph);
+  const solHeuristic = retrievalWithGraph.composeSolution({
     ...baseQuery,
-    requiredCapabilities: ['workspace'] // matches prim-split-console-layout which is independently verified, let's test a tag or substring that matches an unverified or check lossLog behavior
-  };
-  assert(sol1.lossLog !== undefined, 'Test 7: Loss log structure exists for epistemic refinement');
+    requiredCapabilities: ['anatomy'] // matches pat-consistent-editor-anatomy which is PROPOSED
+  });
+  const hasHeuristicMatchOnly = solHeuristic.lossLog?.some(l => l.type === 'HEURISTIC_MATCH_ONLY') ?? false;
+  assert(hasHeuristicMatchOnly && solHeuristic.validationStatus === 'UNVERIFIED', 'Test 7: Heuristic-only match registers HEURISTIC_MATCH_ONLY and forces UNVERIFIED status');
 
   // Test 8: Backward compatibility of existing retrieval and audit fields
   assert(Array.isArray(sol1.matchedPatterns) && Array.isArray(sol1.matchedPrimitives), 'Test 8: Backward compatibility preserved for matchedPatterns and matchedPrimitives');

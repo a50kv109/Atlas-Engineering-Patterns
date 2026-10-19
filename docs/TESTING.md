@@ -19,16 +19,17 @@ npm run build
 
 ## 2. Test Architecture and Suites
 
-Automated tests are consolidated in `tests/audit.test.ts` and executed via `tsx`:
+Automated tests are housed in `tests/audit.test.ts` and `tests/epistemicLoss.test.ts` and executed via `npm test` (`tsx tests/audit.test.ts && tsx tests/epistemicLoss.test.ts`):
 
 ```
 ================================================================
 ATLAS ENGINEERING PATTERNS — TEST SUITE EXECUTION
 ================================================================
 --- 1. Canonical Dataset Structure & Stability ---
-[PASS] Canonical entity count (23) meets baseline threshold
+[PASS] Canonical entity count (53) meets baseline threshold
 [PASS] All canonical entity IDs are strictly unique
 [PASS] All 5 canonical entity types are populated
+[PASS] Deterministic Reasoning Anchor pattern is present in canonical records
 
 --- 2. Knowledge Graph & Relationship Rules ---
 [PASS] Zero dangling edges in knowledge graph
@@ -51,7 +52,22 @@ ATLAS ENGINEERING PATTERNS — TEST SUITE EXECUTION
 [PASS] Acceptance Audit formal verdict is ACCEPTED (12/12 criteria passed)
 [PASS] Acceptance Audit reports zero critical findings
 ================================================================
-TOTAL TESTS: 16 | PASSED: 16 | FAILED: 0
+TOTAL AUDIT TESTS: 17 | PASSED: 17 | FAILED: 0
+================================================================
+
+================================================================
+ATLAS × SOL-2 — EPISTEMIC REFINEMENT & LOSS LOG TESTS (PHASE 1.3)
+================================================================
+[PASS] Test 1: Validation status correctly computed
+[PASS] Test 2: Epistemic provenance is attached to solution
+[PASS] Test 3: Knowledge gaps force UNVERIFIED validation status instead of false COMPATIBLE
+[PASS] Test 4: Active conflicts tracked separately from technical incompatibility
+[PASS] Test 5: Loss log registers unmet requirements
+[PASS] Test 6: Excluded candidates correctly logged in lossLog
+[PASS] Test 7: Heuristic-only match registers HEURISTIC_MATCH_ONLY and forces UNVERIFIED status
+[PASS] Test 8: Backward compatibility preserved for matchedPatterns and matchedPrimitives
+================================================================
+TOTAL EPISTEMIC TESTS: 8 | PASSED: 8 | FAILED: 0
 ================================================================
 ```
 

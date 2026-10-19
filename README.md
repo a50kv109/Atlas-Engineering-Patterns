@@ -4,7 +4,7 @@
 **Domain**: Interface Configuration for Educational, Research, and Laboratory Stands
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Tests](https://img.shields.io/badge/tests-16%20passed%20%2F%200%20failed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-25%20passed%20%2F%200%20failed-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-blue.svg)]()
 [![Ontology](https://img.shields.io/badge/Ontology-5%20Classes%20%C2%B7%208%20Relations-cyan.svg)]()
 
@@ -77,22 +77,22 @@ See [docs/ONTOLOGY.md](docs/ONTOLOGY.md) for full relationship rules and semanti
 ## 5. Architectural Overview
 
 The system operates across three decoupled layers:
-1. **Canonical Knowledge Storage**: 37 verified records typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
+1. **Canonical Knowledge Storage**: 53 verified records typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
 2. **Knowledge Graph Engine (`src/atlas/graphEngine.ts`)**: Dynamically extracts typed directional relationships (`USES`, `COMPOSES_WITH`, `REQUIRES`, `ALTERNATIVE_TO`, `SPECIALIZES`, `CONFLICTS_WITH`, `IMPLEMENTED_IN`, `VERIFIED_BY`) and validates structural integrity.
-3. **Retrieval & Composition Engine (`src/atlas/retrievalEngine.ts`)**: Deterministically evaluates stand requirements against user levels, screen counts, and physical peripherals; enforces hard constraints; detects mutual conflicts; and reports honest **Knowledge Gaps** when requirements exceed canonical knowledge.
+3. **Retrieval & Composition Engine (`src/atlas/retrievalEngine.ts`)**: Deterministically evaluates stand requirements against user levels, screen counts, and physical peripherals; enforces hard constraints; detects mutual conflicts; distinguishes heuristic matches (`HEURISTIC_MATCH_ONLY`) from verified coverage; and reports honest **Knowledge Gaps** when requirements exceed canonical knowledge.
 
-For deep architectural documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+For deep architectural documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/PATTERN_DRA.md](docs/PATTERN_DRA.md) (Deterministic Reasoning Anchor).
 
 ---
 
 ## 6. Available Application Functions
 
 The included laboratory workbench UI provides:
-- **Registry Browser**: Filter, search, and inspect the 37 canonical records with complete schema details and trade-offs.
+- **Registry Browser**: Filter, search, and inspect the 53 canonical records with complete schema details and trade-offs.
 - **Interactive Knowledge Graph Visualizer**: Pan, zoom, inspect nodes, and highlight incoming/outgoing relational edges on an interactive SVG canvas.
 - **Stand Solution Composer**: Select a stand scenario (Wind Tunnel, Bioreactor, High-Voltage, or Custom), evaluate constraints, inspect component selection rationales, test an interactive live layout simulation (E-stop ribbon, steppers, crosshairs, 1000Hz Canvas waveform buffer), and export a machine-readable JSON manifest.
 - **Pattern Ingestion Workbench**: Submit candidate ideas through automated scope verification, Jaccard token duplicate detection, stable ID generation, and schema validation.
-- **Acceptance Audit Runner**: Execute all 12 criteria of the Prompt 5 specification with real-time pass/fail evidence reporting.
+- **Acceptance Audit Runner**: Execute all criteria of the acceptance specification with real-time pass/fail evidence reporting.
 - **Contract Documentation**: In-app viewer for the architectural contract and project mission.
 
 ---
@@ -102,11 +102,11 @@ The included laboratory workbench UI provides:
 | Capability | Real Current Status |
 | :--- | :--- |
 | **Data Models & Types** | **Implemented & Inspected** in `src/atlas/types.ts`. |
-| **Canonical Records** | **Implemented & Tested**: 23 verified records with stable IDs. |
+| **Canonical Records** | **Implemented & Tested**: 53 verified records with stable IDs (`src/atlas/canonicalData.ts`). |
 | **Knowledge Graph** | **Implemented & Tested**: In-memory builder, 0 dangling edges, validated semantics. |
-| **Retrieval Engine** | **Implemented & Tested**: Deterministic rule-based scoring and honest gap reporting. |
-| **Ingestion Pipeline** | **Implemented (Prototype)**: Scope filter, duplicate heuristic, ID allocator. Client-side local acceptance. |
-| **Acceptance Audit** | **Implemented & Tested**: 16/16 CLI assertions pass; formal verdict `ACCEPTED`. |
+| **Retrieval Engine & SOL-2** | **Implemented & Tested**: Heuristic vs verified separation (`HEURISTIC_MATCH_ONLY`), loss log, gap reporting. |
+| **Deterministic Reasoning Anchor (DRA)** | **Implemented & Documented**: 7-stage agent reasoning anchor (`docs/PATTERN_DRA.md`). |
+| **Automated Test Suites** | **Implemented & Tested**: 25 automated assertions pass (17 audit tests + 8 epistemic loss tests). |
 | **Physical Safety** | **Not Claimed**: UI components integrate with hardware loops; software does not substitute for hardware functional safety. |
 
 ---
