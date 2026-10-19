@@ -77,7 +77,7 @@ See [docs/ONTOLOGY.md](docs/ONTOLOGY.md) for full relationship rules and semanti
 ## 5. Architectural Overview
 
 The system operates across three decoupled layers:
-1. **Canonical Knowledge Storage**: 23 verified records typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
+1. **Canonical Knowledge Storage**: 37 verified records typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
 2. **Knowledge Graph Engine (`src/atlas/graphEngine.ts`)**: Dynamically extracts typed directional relationships (`USES`, `COMPOSES_WITH`, `REQUIRES`, `ALTERNATIVE_TO`, `SPECIALIZES`, `CONFLICTS_WITH`, `IMPLEMENTED_IN`, `VERIFIED_BY`) and validates structural integrity.
 3. **Retrieval & Composition Engine (`src/atlas/retrievalEngine.ts`)**: Deterministically evaluates stand requirements against user levels, screen counts, and physical peripherals; enforces hard constraints; detects mutual conflicts; and reports honest **Knowledge Gaps** when requirements exceed canonical knowledge.
 
@@ -88,7 +88,7 @@ For deep architectural documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTU
 ## 6. Available Application Functions
 
 The included laboratory workbench UI provides:
-- **Registry Browser**: Filter, search, and inspect the 23 canonical records with complete schema details and trade-offs.
+- **Registry Browser**: Filter, search, and inspect the 37 canonical records with complete schema details and trade-offs.
 - **Interactive Knowledge Graph Visualizer**: Pan, zoom, inspect nodes, and highlight incoming/outgoing relational edges on an interactive SVG canvas.
 - **Stand Solution Composer**: Select a stand scenario (Wind Tunnel, Bioreactor, High-Voltage, or Custom), evaluate constraints, inspect component selection rationales, test an interactive live layout simulation (E-stop ribbon, steppers, crosshairs, 1000Hz Canvas waveform buffer), and export a machine-readable JSON manifest.
 - **Pattern Ingestion Workbench**: Submit candidate ideas through automated scope verification, Jaccard token duplicate detection, stable ID generation, and schema validation.

@@ -52,6 +52,9 @@ function runTests() {
     'All 5 canonical entity types are populated'
   );
 
+  const draPattern = ALL_CANONICAL_ENTITIES.find(e => e.id === 'pat-deterministic-reasoning-anchor');
+  assert(draPattern !== undefined && draPattern.type === 'pattern', 'Deterministic Reasoning Anchor pattern is present in canonical records');
+
   // TEST SUITE 2: Knowledge Graph Construction & Semantic Validation
   console.log('\n--- 2. Knowledge Graph & Relationship Rules ---');
   const graph = new KnowledgeGraph(ALL_CANONICAL_ENTITIES);

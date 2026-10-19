@@ -46,6 +46,16 @@ export interface GraphRelation {
   bidirectional?: boolean;
 }
 
+export interface Contract {
+  inputPorts: { id: string; type: string; description: string; required: boolean }[];
+  outputPorts: { id: string; type: string; description: string }[];
+  guarantees: string[];
+  constraints: string[];
+  version: string;
+}
+
+export type CompatibilityResult = 'COMPATIBLE' | 'INCOMPATIBLE' | 'UNKNOWN';
+
 export interface BaseEntity {
   id: string; // e.g. prim-analog-dial, pat-telemetry-console
   type: EntityType;
@@ -60,6 +70,7 @@ export interface BaseEntity {
   createdAt: string;
   updatedAt: string;
   authorOrSource: string;
+  contract?: Contract;
 }
 
 export interface PrimitiveEntity extends BaseEntity {
@@ -194,6 +205,33 @@ export interface ComposedStandSolution {
       role: string;
     }[];
   };
+  compatibilityIssues?: {
+    entityA: string;
+    entityB: string;
+    result: CompatibilityResult;
+    reason?: string;
+  }[];
+  validationStatus: 'GENERATED' | 'COMPATIBLE' | 'INCOMPATIBLE' | 'UNVERIFIED';
+  epistemicProvenance?: EpistemicProvenance[];
+  lossLog?: LossItem[];
+}
+
+export type EpistemicStatus = 'OBSERVED_EVIDENCE' | 'INFERRED' | 'UNKNOWN' | 'CONFLICT';
+
+export type LossItemType = 'UNMET_REQUIREMENT' | 'EXCLUDED_CANDIDATE' | 'UNVERIFIED_CONNECTION' | 'HEURISTIC_MISMATCH' | 'HEURISTIC_MATCH_ONLY';
+
+export interface LossItem {
+  type?: LossItemType;
+  requirementId?: string;
+  entityId?: string;
+  sourceReference?: string;
+  reason: string;
+}
+
+export interface EpistemicProvenance {
+  statement: string;
+  status: EpistemicStatus;
+  sourceReference?: string;
 }
 
 export interface ProposalInput {

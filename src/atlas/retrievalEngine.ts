@@ -8,7 +8,8 @@ import {
   ComposedStandSolution,
   PatternEntity,
   PrimitiveEntity,
-  EvidenceEntity
+  EvidenceEntity,
+  CompatibilityResult
 } from './types';
 import { KnowledgeGraph } from './graphEngine';
 import { ALL_CANONICAL_ENTITIES } from './canonicalData';
@@ -187,29 +188,38 @@ export class RetrievalEngine {
     const allSelectedIds = [...selectedPatternIds, ...Array.from(matchedPrimitivesMap.keys())];
     const activeConflicts = this.graph.detectConflicts(allSelectedIds);
 
-    // Knowledge Gap Detection:
-    // Check if any explicitly required capability was left completely unfulfilled
+    // Knowledge Gap & Epistemic Requirement Verification:
+    // Check if required capabilities have verified coverage vs heuristic-only match vs unmet requirement.
+    const heuristicMatchesOnly: string[] = [];
+
     for (const reqCap of requiredCapsNormalized) {
       let isFulfilled = false;
+      let hasVerifiedCoverage = false;
 
       // Check matched patterns
       for (const mp of matchedPatterns) {
         const matchesTag = mp.pattern.tags.some(t => t.toLowerCase() === reqCap || t.toLowerCase().includes(reqCap));
-        const matchesText = mp.pattern.title.toLowerCase().includes(reqCap) || mp.pattern.shortDescription.toLowerCase().includes(reqCap);
+        const matchesText = mp.pattern.title.toLowerCase().includes(reqCap) || mp.pattern.shortDescription.toLowerCase().includes(reqCap) || mp.pattern.problemStatement.toLowerCase().includes(reqCap);
         if (matchesTag || matchesText) {
           isFulfilled = true;
-          break;
+          const isVerified = ['INDEPENDENTLY_VERIFIED', 'MEASURED', 'TESTED'].includes(mp.evidenceStatus) || mp.pattern.evidenceIds.length > 0;
+          if (isVerified) {
+            hasVerifiedCoverage = true;
+          }
         }
       }
 
       // Check matched primitives
-      if (!isFulfilled) {
+      if (!isFulfilled || !hasVerifiedCoverage) {
         for (const mp of matchedPrimitivesMap.values()) {
           const matchesTag = mp.primitive.tags.some(t => t.toLowerCase() === reqCap || t.toLowerCase().includes(reqCap));
           const matchesText = mp.primitive.title.toLowerCase().includes(reqCap) || mp.primitive.shortDescription.toLowerCase().includes(reqCap);
           if (matchesTag || matchesText) {
             isFulfilled = true;
-            break;
+            const isVerified = ['INDEPENDENTLY_VERIFIED', 'MEASURED', 'TESTED'].includes(mp.primitive.lifecycleStatus) || mp.primitive.evidenceIds.length > 0;
+            if (isVerified) {
+              hasVerifiedCoverage = true;
+            }
           }
         }
       }
@@ -220,6 +230,8 @@ export class RetrievalEngine {
           reason: `No canonical pattern or construction primitive in the repository satisfies '${reqCap}' under current constraints (${query.purpose}, ${query.userLevel}, ${query.screensCount} screen(s)).`,
           recommendation: `Submit a candidate pattern or primitive proposal to the Atlas ingestion pipeline targeting '${reqCap}'. Do not fabricate non-canonical components.`
         });
+      } else if (!hasVerifiedCoverage) {
+        heuristicMatchesOnly.push(reqCap);
       }
     }
 
@@ -255,6 +267,87 @@ export class RetrievalEngine {
 
     const evidenceBackingPercent = totalEntitiesUsed > 0 ? Math.round((verifiedEntitiesCount / totalEntitiesUsed) * 100) : 0;
 
+    const lossLog: ComposedStandSolution['lossLog'] = [];
+
+    // Register unmet requirements as loss items
+    for (const gap of knowledgeGaps) {
+      lossLog.push({
+        type: 'UNMET_REQUIREMENT',
+        requirementId: gap.unmetRequirement,
+        reason: gap.reason
+      });
+    }
+
+    // Register heuristic-only matches as loss items (HEURISTIC_MATCH_ONLY)
+    for (const reqCap of heuristicMatchesOnly) {
+      lossLog.push({
+        type: 'HEURISTIC_MATCH_ONLY',
+        requirementId: reqCap,
+        reason: `Capability requirement '${reqCap}' matched only via heuristic tag/text without formal verified evidence backing (HEURISTIC_MATCH_ONLY).`
+      });
+    }
+
+    // Register excluded candidates (hard constraint violations or score < 20)
+    for (const candidate of candidateRankings) {
+      if (candidate.hardConstraintViolated || candidate.score < 20) {
+        lossLog.push({
+          type: 'EXCLUDED_CANDIDATE',
+          entityId: candidate.pattern.id,
+          reason: candidate.violationReason || `Excluded due to score ${candidate.score} (< 20) or conflict/applicability mismatch`
+        });
+      }
+    }
+
+    const compatibilityIssues: ComposedStandSolution['compatibilityIssues'] = [];
+    for (const [primId, data] of matchedPrimitivesMap) {
+      if (data.parentPatternId) {
+        const pattern = allPatterns.find(p => p.id === data.parentPatternId);
+        const primitive = data.primitive;
+        if (pattern && primitive) {
+          const res = this.graph.checkCompatibility(pattern, primitive);
+          if (res !== 'COMPATIBLE') {
+            compatibilityIssues.push({
+              entityA: pattern.id,
+              entityB: primitive.id,
+              result: res,
+              reason: res === 'INCOMPATIBLE' ? 'Port type mismatch' : 'Contract missing'
+            });
+            lossLog.push({
+              type: 'UNVERIFIED_CONNECTION',
+              entityId: primitive.id,
+              reason: res === 'INCOMPATIBLE' ? `Technical incompatibility with ${pattern.id}` : `Contract missing for ${primitive.id}`
+            });
+          }
+        }
+      }
+    }
+
+    const validationStatus = this.calculateValidationStatus(
+      compatibilityIssues,
+      matchedPrimitivesMap.size,
+      knowledgeGaps.length,
+      activeConflicts.length,
+      heuristicMatchesOnly.length
+    );
+
+    const epistemicProvenance: ComposedStandSolution['epistemicProvenance'] = [
+      {
+        statement: `Evidence backing level stands at ${evidenceBackingPercent}% across ${totalEntitiesUsed} matched entities.`,
+        status: evidenceBackingPercent > 50 ? 'OBSERVED_EVIDENCE' : 'INFERRED'
+      },
+      {
+        statement: 'Verification scope is strictly limited to matched pattern-primitive USES pairs rather than full port graph.',
+        status: 'INFERRED'
+      }
+    ];
+
+    if (activeConflicts.length > 0) {
+      epistemicProvenance.push({
+        statement: `Detected ${activeConflicts.length} active epistemic/structural conflict(s) among selected entities.`,
+        status: 'CONFLICT'
+      });
+    }
+
     return {
       query,
       matchedPatterns,
@@ -269,7 +362,32 @@ export class RetrievalEngine {
       blueprint: {
         layoutType: query.screensCount > 1 ? 'multi-monitor-sync' : 'asymmetric-split',
         zones: layoutZones
-      }
+      },
+      compatibilityIssues,
+      validationStatus,
+      epistemicProvenance,
+      lossLog
     };
   }
+
+  private calculateValidationStatus(
+    compatibilityIssues: { result: CompatibilityResult }[],
+    totalChecked: number,
+    knowledgeGapsCount: number,
+    activeConflictsCount: number,
+    heuristicMatchesOnlyCount: number
+  ): 'COMPATIBLE' | 'INCOMPATIBLE' | 'UNVERIFIED' {
+    if (totalChecked === 0 && knowledgeGapsCount > 0) return 'UNVERIFIED';
+
+    const hasIncompatible = compatibilityIssues.some(issue => issue.result === 'INCOMPATIBLE');
+    if (hasIncompatible) return 'INCOMPATIBLE';
+
+    const hasUnknown = compatibilityIssues.some(issue => issue.result === 'UNKNOWN');
+    if (hasUnknown || knowledgeGapsCount > 0 || activeConflictsCount > 0 || heuristicMatchesOnlyCount > 0) {
+      return 'UNVERIFIED';
+    }
+
+    return totalChecked > 0 ? 'COMPATIBLE' : 'UNVERIFIED';
+  }
 }
+

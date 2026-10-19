@@ -3,7 +3,7 @@
  * Generated directly from canonical records.
  */
 
-import { AtlasEntity, EntityType, RelationType, GraphRelation } from './types';
+import { AtlasEntity, EntityType, RelationType, GraphRelation, CompatibilityResult } from './types';
 
 export interface GraphNode {
   id: string;
@@ -309,5 +309,28 @@ export class KnowledgeGraph {
     }
 
     return conflicts;
+  }
+
+  public checkCompatibility(source: AtlasEntity, target: AtlasEntity): CompatibilityResult {
+    if (!source.contract || !target.contract) {
+      return 'UNKNOWN';
+    }
+
+    const { outputPorts } = source.contract;
+    const { inputPorts } = target.contract;
+
+    // Minimal compatibility rule: at least one matching output port for every required input port
+    for (const input of inputPorts) {
+      if (input.required) {
+        const hasMatchingOutput = outputPorts.some(
+          output => output.type === input.type
+        );
+        if (!hasMatchingOutput) {
+          return 'INCOMPATIBLE';
+        }
+      }
+    }
+
+    return 'COMPATIBLE';
   }
 }

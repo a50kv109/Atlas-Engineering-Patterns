@@ -41,15 +41,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
   // Compute 2D node coordinates deterministically in layered radial or column layout
   const nodePositions = useMemo(() => {
     const positions: Record<string, { x: number; y: number }> = {};
-    const width = 1100;
-    const height = 750;
-
-    // Group nodes by entity type into distinct structural zones
     const primitives = allNodes.filter(n => n.type === 'primitive');
     const patterns = allNodes.filter(n => n.type === 'pattern');
     const configs = allNodes.filter(n => n.type === 'configuration');
     const impls = allNodes.filter(n => n.type === 'implementation');
     const evidence = allNodes.filter(n => n.type === 'evidence');
+    const width = 1100;
+    const height = Math.max(820, patterns.length * 52);
 
     // Column coordinates:
     // Left: Evidence (x = 100)
