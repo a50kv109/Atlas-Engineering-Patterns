@@ -1,0 +1,6 @@
+{
+  "name": "Atlas Engineering Patterns",
+  "description": "Structured knowledge repository, graph ontology, and composition engine for designing educational, research, and laboratory stand interfaces.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
