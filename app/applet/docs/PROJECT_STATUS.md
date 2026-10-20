@@ -29,7 +29,7 @@
 
 ## 2. Preliminary Solutions & Contract Designs (Not Yet Implemented)
 
-### A. AAM-V2 Integration Contract (`docs/LANGUAGE_KERNEL_INTEGRATION_AUDIT.md`)
+### A. AAM-V2 Integration Contract (`LANGUAGE_KERNEL_INTEGRATION_AUDIT.md`)
 * **Status:** `SPECIFICATION` / `PROPOSED`.
 * **Design Elements:**
   * Designed separation between AAM semantic normalization (AXIS-10, ESC protocol, Integrity Score, TDI) and Pattern Lens deterministic evaluation.
