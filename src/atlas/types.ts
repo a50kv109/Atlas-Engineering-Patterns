@@ -168,6 +168,47 @@ export interface StandRequirementQuery {
   optionalPreferences: string[];
 }
 
+export interface NhfgPatternGuidance {
+  source: {
+    id: string;
+    standard: string;
+    title: string;
+    officialUrl: string;
+    publicationDate: string;
+    confirmedDate?: string;
+    atlasVerifiedDate: string;
+  };
+  principle: {
+    id: string;
+    title: string;
+    sectionRef: string;
+    conciseSummary: string;
+  };
+  requirement?: {
+    id: string;
+    statement: string;
+    requirementType: RequirementType;
+    safetyCritical: boolean;
+  };
+  mappingId: string;
+  rationale: string;
+  epistemicCategory: EpistemicCategory;
+  status: MappingStatusModel;
+  applicabilityConditions: string[];
+  knownLimitations: string[];
+  missingEvidence: string[];
+}
+
+export interface NhfgGuidanceSummary {
+  totalNormativeMappings: number;
+  principlesCovered: string[];
+  unverifiedMappingsCount: number;
+  hypothesisMappingsCount: number;
+  verifiedScenariosCount: number;
+  conformanceClaimedCount: number;
+  conformanceDisclaimers: string[];
+}
+
 export interface ComposedStandSolution {
   query: StandRequirementQuery;
   matchedPatterns: {
@@ -176,6 +217,7 @@ export interface ComposedStandSolution {
     evidenceStatus: LifecycleStatus;
     supportingEvidence: EvidenceEntity[];
     alternatives: PatternEntity[];
+    nhfgGuidance?: NhfgPatternGuidance[];
   }[];
   matchedPrimitives: {
     primitive: PrimitiveEntity;
@@ -214,6 +256,7 @@ export interface ComposedStandSolution {
   validationStatus: 'GENERATED' | 'COMPATIBLE' | 'INCOMPATIBLE' | 'UNVERIFIED';
   epistemicProvenance?: EpistemicProvenance[];
   lossLog?: LossItem[];
+  nhfgSummary?: NhfgGuidanceSummary;
 }
 
 export type EpistemicStatus = 'OBSERVED_EVIDENCE' | 'INFERRED' | 'UNKNOWN' | 'CONFLICT';
@@ -289,3 +332,141 @@ export interface AcceptanceReport {
   findings: AuditFinding[];
   summaryNote: string;
 }
+
+/**
+ * ============================================================================
+ * Normative & Human Factors Guidance (NHFG) Layer Types (Stage C Pilot)
+ * ============================================================================
+ */
+
+export type SourceVerificationStatus =
+  | 'OFFICIAL_METADATA_VERIFIED'
+  | 'DRAFT_SPECIFICATION'
+  | 'HISTORICAL_OBSOLETE'
+  | 'UNVERIFIED_CITATION';
+
+export interface SourceRecord {
+  id: string; // e.g. "src-iso9241-110-2020"
+  standard: string; // e.g. "ISO 9241-110:2020"
+  title: string;
+  edition: string; // e.g. "2020"
+  publicationDate: string; // e.g. "2020-05"
+  confirmedDate?: string; // e.g. "2025"
+  atlasVerifiedDate: string; // e.g. "2026-10-20"
+  officialUrl: string;
+  verificationStatus: SourceVerificationStatus;
+  scopeSummary: string;
+  targetAudience: ('system_designer' | 'software_developer' | 'requirements_analyst' | 'evaluator')[];
+  safetyDisclaimer: string;
+  rightsNotice: string;
+}
+
+export type PrincipleKey =
+  | 'suitability-for-task'
+  | 'self-descriptiveness'
+  | 'conformity-with-user-expectations'
+  | 'learnability'
+  | 'controllability'
+  | 'use-error-robustness'
+  | 'user-engagement';
+
+export interface ApplicabilityContext {
+  safetyCriticalContextNeedsAdditionalGuidance: boolean;
+  minUserLevel: UserLevel;
+  excludedDomains?: string[];
+  mandatoryPeripherals?: string[];
+}
+
+export interface PrincipleRecord {
+  id: string; // e.g. "prin-iso9241-110-self-descriptiveness"
+  sourceId: string; // References SourceRecord.id
+  sectionRef: string; // e.g. "4.2"
+  principleKey: PrincipleKey;
+  title: string;
+  conciseSummary: string;
+  applicability: ApplicabilityContext;
+  interpretationLimitations: string[];
+}
+
+export type RequirementType =
+  | 'INTERFACE_DISCLOSURE'
+  | 'DATA_INTEGRITY_LABELING'
+  | 'STATE_FEEDBACK'
+  | 'OPERATOR_INTERLOCK'
+  | 'REVERSIBLE_ACTION'
+  | 'ERROR_TOLERANCE';
+
+export interface RequirementRecord {
+  id: string; // e.g. "req-iso9241-110-no-data-distinct"
+  principleId: string; // References PrincipleRecord.id
+  sourceId: string; // References SourceRecord.id
+  sectionRef: string; // e.g. "4.2.3"
+  statement: string;
+  requirementType: RequirementType;
+  verificationMethod: 'SCENARIO_SIMULATION' | 'AUTOMATED_ASSERTION' | 'OPERATOR_TRIAL' | 'EXPERT_INSPECTION';
+  successCriteria: string[];
+  safetyCritical: boolean;
+}
+
+export type EpistemicCategory =
+  | 'SOURCE_CONFIRMED'
+  | 'ENGINEERING_INTERPRETATION'
+  | 'DESIGN_HYPOTHESIS'
+  | 'VERIFIED_RESULT'
+  | 'UNVERIFIED_OR_UNKNOWN';
+
+export type ConformanceEvaluationMethod =
+  | 'NONE'
+  | 'FIRST_PARTY_SELF_ASSESSMENT'
+  | 'SECOND_PARTY_AUDIT'
+  | 'THIRD_PARTY_CERTIFICATION';
+
+export interface MappingStatusModel {
+  designRationaleStatus: 'NOT_ASSESSED' | 'DESIGN_RATIONALE_PROVIDED';
+  scenarioVerificationStatus: 'NOT_ASSESSED' | 'SCENARIO_VERIFIED' | 'SCENARIO_FAILED';
+  userEvaluationStatus: 'NOT_ASSESSED' | 'USER_EVALUATED' | 'USER_EVALUATION_FAILED';
+  conformanceStatus: 'CONFORMANCE_NOT_ESTABLISHED' | 'CONFORMANCE_CLAIMED';
+  conformanceMethod?: ConformanceEvaluationMethod;
+}
+
+export interface PatternMapping {
+  id: string; // e.g. "map-prin-self-descriptiveness-pat-epistemic-status"
+  principleId: string; // References PrincipleRecord.id
+  requirementId?: string; // Optional reference to RequirementRecord.id
+  patternId: string; // Strict reference to canonical pattern id
+  rationale: string;
+  epistemicCategory: EpistemicCategory;
+  status: MappingStatusModel;
+  applicabilityConditions: string[];
+  knownLimitations: string[];
+  verificationReference?: string; // e.g. "verif-req-no-data-scenario-01"
+}
+
+export interface VerificationRecord {
+  id: string; // e.g. "verif-req-no-data-scenario-01"
+  requirementId: string; // References RequirementRecord.id
+  scenarioTitle: string;
+  testFileRef: string;
+  testName: string;
+  passed: boolean;
+  executedAt: string;
+  evidenceEntityId?: string; // Optional link to evid-*
+  untestedBoundaries: string[];
+}
+
+export interface NhfgRegistryValidationReport {
+  isValid: boolean;
+  totalSources: number;
+  totalPrinciples: number;
+  totalRequirements: number;
+  totalMappings: number;
+  totalVerifications: number;
+  duplicateIds: string[];
+  unresolvedSourceRefs: string[];
+  unresolvedPrincipleRefs: string[];
+  unresolvedRequirementRefs: string[];
+  unresolvedPatternRefs: string[];
+  invalidStatusMappings: { mappingId: string; error: string }[];
+  unverifiedMappingsCount: number;
+}
+

@@ -4,9 +4,10 @@
 **Domain**: Interface Configuration for Educational, Research, and Laboratory Stands
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Tests](https://img.shields.io/badge/tests-25%20passed%20%2F%200%20failed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-71%20passed%20%2F%200%20failed-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-blue.svg)]()
 [![Ontology](https://img.shields.io/badge/Ontology-5%20Classes%20%C2%B7%208%20Relations-cyan.svg)]()
+[![NHFG](https://img.shields.io/badge/NHFG-Retrieval%20Integrated-purple.svg)]()
 
 ---
 
@@ -106,7 +107,8 @@ The included laboratory workbench UI provides:
 | **Knowledge Graph** | **Implemented & Tested**: In-memory builder, 0 dangling edges, validated semantics. |
 | **Retrieval Engine & SOL-2** | **Implemented & Tested**: Heuristic vs verified separation (`HEURISTIC_MATCH_ONLY`), loss log, gap reporting. |
 | **Deterministic Reasoning Anchor (DRA)** | **Implemented & Documented**: 7-stage agent reasoning anchor (`docs/PATTERN_DRA.md`). |
-| **Automated Test Suites** | **Implemented & Tested**: 25 automated assertions pass (17 audit tests + 8 epistemic loss tests). |
+| **Normative Guidance (NHFG Layer)** | **Implemented & Integrated (Stage D)**: 3 ISO sources, 7 ISO 9241-110 principles, integrated with `RetrievalEngine`, traceable mappings, non-linear status model (`docs/NHFG_RETRIEVAL_INTEGRATION.md`). |
+| **Automated Test Suites** | **Implemented & Tested**: 71 automated assertions pass (17 audit + 8 epistemic loss + 29 NHFG pilot + 17 retrieval integration tests). |
 | **Physical Safety** | **Not Claimed**: UI components integrate with hardware loops; software does not substitute for hardware functional safety. |
 
 ---
@@ -151,7 +153,28 @@ npm run build
 
 ---
 
-## 9. Current Limitations & Factual Safeguards
+## 9. Pattern Lens & AAM-Language-Kernels Integration Specification
+
+In addition to the Atlas Core React/TypeScript application, the repository includes specifications and modular engines for **Pattern Lens** and **AAM-Language-Kernels**:
+
+1. **Pattern Lens v0.1**:
+   - An autonomous search, constraint verification, and evidence audit engine implemented in pure Python 3.10+ (zero external dependencies).
+   - Fully verified with 20/20 unit tests (`tests_pattern_lens/`).
+   - Operates independently to evaluate requirements, inventory completeness (`UNKNOWN` vs `VIOLATED`), evidence versioning, and deterministic lexicographical ranking.
+2. **AAM-Language-Kernels v2**:
+   - A multi-lingual semantic normalization architecture (AXIS-10, Engineering Semantic Compiler protocol, Integrity Score, and Tensor Divergence Index).
+   - Provides glossaries and translation governance across 10 natural languages.
+3. **Planned Integration Gateway (`aam_gateway.py`)**:
+   - Currently in **Specification Stage** (`docs/LANGUAGE_KERNEL_INTEGRATION_AUDIT.md`).
+   - Designed as an isolated adapter to pass normalized semantic intent from AAM language kernels into Pattern Lens without coupling or altering its core mechanics.
+   - Enforces strict safety invariants: high linguistic Integrity Score cannot elevate authorization or override failed constraints/evidence.
+   - Includes planned fallback handling (`PASSTHROUGH`), ambiguity detection (`NEEDS_CLARIFICATION`), and a 12-test integration safety suite.
+
+For complete documentation indexes, see [docs/README.md](docs/README.md) and [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
+
+---
+
+## 10. Current Limitations & Factual Safeguards
 
 1. **No Software-Only Safety Certification**:
    - The interface components (such as `prim-emergency-estop-banner` and `pat-dual-operator-safety-interlock`) are designed to participate in supervisory control loops alongside physical hardware (e-stop buttons, safety relays, enclosure interlocks).
@@ -163,7 +186,7 @@ npm run build
 
 ---
 
-## 10. Roadmap
+## 11. Roadmap
 
 - **Stage 1**: GitHub publication, documentation transparency, and test suite reproducibility (**Current Stage**).
 - **Stage 2**: Independent inspection and refinement of existing canonical records (**In Progress**).
@@ -177,7 +200,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for full details.
 
 ---
 
-## 11. Contributing
+## 12. Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting new primitives, patterns, configurations, and empirical evidence.
 
@@ -185,7 +208,7 @@ All new proposals are treated as candidates until validated and reviewed.
 
 ---
 
-## 12. License
+## 13. License
 
 **License Status**: Not yet assigned.
 

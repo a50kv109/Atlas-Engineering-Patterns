@@ -9,16 +9,21 @@ import {
   PatternEntity,
   PrimitiveEntity,
   EvidenceEntity,
-  CompatibilityResult
+  CompatibilityResult,
+  NhfgPatternGuidance,
+  NhfgGuidanceSummary
 } from './types';
 import { KnowledgeGraph } from './graphEngine';
 import { ALL_CANONICAL_ENTITIES } from './canonicalData';
+import { NhfgEngine } from './nhfgEngine';
 
 export class RetrievalEngine {
   private graph: KnowledgeGraph;
+  private nhfgEngine: NhfgEngine;
 
-  constructor(graph?: KnowledgeGraph) {
+  constructor(graph?: KnowledgeGraph, nhfgEngine?: NhfgEngine) {
     this.graph = graph || new KnowledgeGraph(ALL_CANONICAL_ENTITIES);
+    this.nhfgEngine = nhfgEngine || new NhfgEngine();
   }
 
   public composeSolution(query: StandRequirementQuery): ComposedStandSolution {
@@ -162,12 +167,61 @@ export class RetrievalEngine {
           if (ev) supportingEvidence.push(ev);
         }
 
+        // Trace applicable NHFG normative guidance
+        const patternGuidance = this.nhfgEngine.traceChain(candidate.pattern.id);
+        const nhfgGuidance: NhfgPatternGuidance[] = patternGuidance.map(link => {
+          const missingEvidence: string[] = [];
+          if (link.mapping.status.scenarioVerificationStatus === 'NOT_ASSESSED') {
+            missingEvidence.push('No automated scenario verification executed for this mapping.');
+          }
+          if (link.mapping.status.userEvaluationStatus === 'NOT_ASSESSED') {
+            missingEvidence.push('No empirical trials with representative human operators recorded.');
+          }
+          if (link.mapping.status.conformanceStatus === 'CONFORMANCE_NOT_ESTABLISHED') {
+            missingEvidence.push('Standard conformance in accordance with formal evaluation procedures is not established.');
+          }
+
+          return {
+            source: {
+              id: link.source.id,
+              standard: link.source.standard,
+              title: link.source.title,
+              officialUrl: link.source.officialUrl,
+              publicationDate: link.source.publicationDate,
+              confirmedDate: link.source.confirmedDate,
+              atlasVerifiedDate: link.source.atlasVerifiedDate
+            },
+            principle: {
+              id: link.principle.id,
+              title: link.principle.title,
+              sectionRef: link.principle.sectionRef,
+              conciseSummary: link.principle.conciseSummary
+            },
+            requirement: link.requirement
+              ? {
+                  id: link.requirement.id,
+                  statement: link.requirement.statement,
+                  requirementType: link.requirement.requirementType,
+                  safetyCritical: link.requirement.safetyCritical
+                }
+              : undefined,
+            mappingId: link.mapping.id,
+            rationale: link.mapping.rationale,
+            epistemicCategory: link.mapping.epistemicCategory,
+            status: link.mapping.status,
+            applicabilityConditions: link.mapping.applicabilityConditions,
+            knownLimitations: link.mapping.knownLimitations,
+            missingEvidence
+          };
+        });
+
         matchedPatterns.push({
           pattern: candidate.pattern,
           selectionReason: candidate.reasons.join('; '),
           evidenceStatus: candidate.pattern.lifecycleStatus,
           supportingEvidence,
-          alternatives
+          alternatives,
+          nhfgGuidance: nhfgGuidance.length > 0 ? nhfgGuidance : undefined
         });
 
         // Expand to pattern primitives via USES
@@ -330,6 +384,51 @@ export class RetrievalEngine {
       heuristicMatchesOnly.length
     );
 
+    // Compute NHFG Summary across all matched patterns
+    let totalNormativeMappings = 0;
+    const principlesCoveredSet = new Set<string>();
+    let unverifiedMappingsCount = 0;
+    let hypothesisMappingsCount = 0;
+    let verifiedScenariosCount = 0;
+    let conformanceClaimedCount = 0;
+
+    for (const mp of matchedPatterns) {
+      if (mp.nhfgGuidance) {
+        for (const g of mp.nhfgGuidance) {
+          totalNormativeMappings++;
+          principlesCoveredSet.add(g.principle.title);
+          if (g.status.scenarioVerificationStatus === 'NOT_ASSESSED') {
+            unverifiedMappingsCount++;
+          } else if (g.status.scenarioVerificationStatus === 'SCENARIO_VERIFIED') {
+            verifiedScenariosCount++;
+          }
+          if (g.epistemicCategory === 'DESIGN_HYPOTHESIS') {
+            hypothesisMappingsCount++;
+          }
+          if (g.status.conformanceStatus === 'CONFORMANCE_CLAIMED') {
+            conformanceClaimedCount++;
+          }
+        }
+      }
+    }
+
+    const nhfgSummary: NhfgGuidanceSummary | undefined =
+      totalNormativeMappings > 0
+        ? {
+            totalNormativeMappings,
+            principlesCovered: Array.from(principlesCoveredSet),
+            unverifiedMappingsCount,
+            hypothesisMappingsCount,
+            verifiedScenariosCount,
+            conformanceClaimedCount,
+            conformanceDisclaimers: [
+              'Normative guidance links provide ergonomic design rationale, not formal certification.',
+              'Automated scenario tests verify simulation assertions only; full usability requires operator trials.',
+              'Standard conformance remains CONFORMANCE_NOT_ESTABLISHED until formal evaluation procedures are conducted.'
+            ]
+          }
+        : undefined;
+
     const epistemicProvenance: ComposedStandSolution['epistemicProvenance'] = [
       {
         statement: `Evidence backing level stands at ${evidenceBackingPercent}% across ${totalEntitiesUsed} matched entities.`,
@@ -346,6 +445,27 @@ export class RetrievalEngine {
         statement: `Detected ${activeConflicts.length} active epistemic/structural conflict(s) among selected entities.`,
         status: 'CONFLICT'
       });
+    }
+
+    if (nhfgSummary && nhfgSummary.totalNormativeMappings > 0) {
+      epistemicProvenance.push({
+        statement: `NHFG normative guidance attached across ${nhfgSummary.totalNormativeMappings} mapping(s) covering ${nhfgSummary.principlesCovered.length} interaction principle(s). Standard conformance remains unestablished.`,
+        status: 'INFERRED'
+      });
+    }
+
+    // Explicitly record design hypotheses in epistemic provenance
+    for (const mp of matchedPatterns) {
+      if (mp.nhfgGuidance) {
+        for (const g of mp.nhfgGuidance) {
+          if (g.epistemicCategory === 'DESIGN_HYPOTHESIS') {
+            epistemicProvenance.push({
+              statement: `Pattern '${mp.pattern.id}' is linked to principle '${g.principle.title}' strictly as a DESIGN_HYPOTHESIS awaiting empirical trials.`,
+              status: 'UNKNOWN'
+            });
+          }
+        }
+      }
     }
 
     return {
@@ -366,7 +486,8 @@ export class RetrievalEngine {
       compatibilityIssues,
       validationStatus,
       epistemicProvenance,
-      lossLog
+      lossLog,
+      nhfgSummary
     };
   }
 

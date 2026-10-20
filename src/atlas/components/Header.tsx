@@ -1,7 +1,7 @@
 import React from 'react';
-import { Layers, Network, Wrench, PlusCircle, CheckCircle2, BookOpen } from 'lucide-react';
+import { Layers, Network, Wrench, PlusCircle, CheckCircle2, BookOpen, ShieldCheck } from 'lucide-react';
 
-export type ActiveTab = 'repository' | 'graph' | 'composer' | 'ingestion' | 'audit' | 'contract';
+export type ActiveTab = 'repository' | 'graph' | 'composer' | 'nhfg' | 'ingestion' | 'audit' | 'contract';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -71,6 +71,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Wrench className="w-4 h-4" />
             <span>Подбор решений</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('nhfg')}
+            className={`flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer py-1 ${
+              activeTab === 'nhfg'
+                ? 'text-cyan-400 border-b-2 border-cyan-400 font-semibold'
+                : 'hover:text-slate-200'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Нормы ISO (NHFG)</span>
           </button>
 
           <button

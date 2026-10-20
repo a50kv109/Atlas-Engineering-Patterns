@@ -12,6 +12,7 @@ import { ComposerView } from './atlas/components/ComposerView';
 import { IngestionView } from './atlas/components/IngestionView';
 import { AuditView } from './atlas/components/AuditView';
 import { ContractDocView } from './atlas/components/ContractDocView';
+import { NhfgView } from './atlas/components/NhfgView';
 import { ALL_CANONICAL_ENTITIES } from './atlas/canonicalData';
 import { AtlasEntity } from './atlas/types';
 
@@ -71,6 +72,12 @@ export default function App() {
         {activeTab === 'composer' && (
           <ComposerView
             initialConfigId={selectedConfigIdForComposer}
+            onSelectEntityDetails={handleSelectEntityForGraph}
+          />
+        )}
+
+        {activeTab === 'nhfg' && (
+          <NhfgView
             onSelectEntityDetails={handleSelectEntityForGraph}
           />
         )}

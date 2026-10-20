@@ -21,7 +21,10 @@ import {
   Sliders,
   Layers,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  BookOpen,
+  ShieldCheck,
+  ExternalLink
 } from 'lucide-react';
 
 interface ComposerViewProps {
@@ -47,7 +50,7 @@ export const ComposerView: React.FC<ComposerViewProps> = ({
   // Solution State
   const [composedSolution, setComposedSolution] = useState<ComposedStandSolution | null>(null);
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null);
-  const [activeTabSub, setActiveTabSub] = useState<'blueprint' | 'manifest' | 'gaps'>('blueprint');
+  const [activeTabSub, setActiveTabSub] = useState<'blueprint' | 'nhfg' | 'manifest' | 'gaps'>('blueprint');
 
   // Simulated Live Stand State for Preview
   const [liveAirfoilAngle, setLiveAirfoilAngle] = useState(4.5);
@@ -413,6 +416,14 @@ export const ComposerView: React.FC<ComposerViewProps> = ({
                     <span className="text-slate-500">Ограничения: </span>
                     <span className="text-emerald-400 font-bold">СОБЛЮДЕНЫ</span>
                   </div>
+                  {composedSolution.nhfgSummary && (
+                    <div>
+                      <span className="text-slate-500">Нормы ISO: </span>
+                      <span className="text-cyan-400 font-bold">
+                        {composedSolution.nhfgSummary.principlesCovered.length} принципов
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Sub Tab Switcher */}
@@ -424,6 +435,19 @@ export const ComposerView: React.FC<ComposerViewProps> = ({
                     }`}
                   >
                     Интерфейс стенда
+                  </button>
+                  <button
+                    onClick={() => setActiveTabSub('nhfg')}
+                    className={`px-3 py-1 rounded cursor-pointer relative ${
+                      activeTabSub === 'nhfg' ? 'bg-slate-800 text-cyan-400 font-semibold' : 'text-slate-400'
+                    }`}
+                  >
+                    Нормы ISO
+                    {composedSolution.nhfgSummary && composedSolution.nhfgSummary.totalNormativeMappings > 0 && (
+                      <span className="ml-1 px-1.5 py-0.2 bg-cyan-950 text-cyan-400 text-[10px] rounded-full border border-cyan-800">
+                        {composedSolution.nhfgSummary.totalNormativeMappings}
+                      </span>
+                    )}
                   </button>
                   <button
                     onClick={() => setActiveTabSub('manifest')}
@@ -629,6 +653,46 @@ export const ComposerView: React.FC<ComposerViewProps> = ({
                             </div>
                           )}
 
+                          {/* NHFG Guidance Links & Anti-Conflation Badges */}
+                          {mp.nhfgGuidance && mp.nhfgGuidance.length > 0 && (
+                            <div className="mt-2.5 pt-2.5 border-t border-slate-800 space-y-2">
+                              <div className="text-[11px] font-semibold text-cyan-400 flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                                <span>Нормативное обоснование (ISO 9241):</span>
+                              </div>
+                              {mp.nhfgGuidance.map((g, gIdx) => (
+                                <div key={gIdx} className="p-2.5 bg-slate-950/70 border border-slate-800/80 rounded space-y-1.5">
+                                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] font-mono">
+                                    <span className="text-slate-300 font-semibold">
+                                      {g.source.standard} · {g.principle.title} ({g.principle.sectionRef})
+                                    </span>
+                                    <span className={`px-1.5 py-0.2 rounded border ${
+                                      g.epistemicCategory === 'SOURCE_CONFIRMED'
+                                        ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
+                                        : g.epistemicCategory === 'ENGINEERING_INTERPRETATION'
+                                        ? 'bg-cyan-950 text-cyan-400 border-cyan-800'
+                                        : 'bg-amber-950 text-amber-400 border-amber-800'
+                                    }`}>
+                                      {g.epistemicCategory}
+                                    </span>
+                                  </div>
+
+                                  {g.requirement && (
+                                    <div className="text-[11px] text-slate-300 italic font-sans">
+                                      "{g.requirement.statement}"
+                                    </div>
+                                  )}
+
+                                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-400 pt-1">
+                                    <span>Сценарий: <strong className="text-emerald-400">{g.status.scenarioVerificationStatus}</strong></span>
+                                    <span>·</span>
+                                    <span>Сертификация: <strong className="text-amber-400">{g.status.conformanceStatus}</strong></span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           {/* Alternatives */}
                           {mp.alternatives.length > 0 && (
                             <div className="mt-2 text-[11px] text-slate-500">
@@ -643,6 +707,163 @@ export const ComposerView: React.FC<ComposerViewProps> = ({
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-View: Normative Guidance (ISO 9241) */}
+              {activeTabSub === 'nhfg' && (
+                <div className="space-y-6">
+                  {/* Top Anti-Conflation Banner */}
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-cyan-400 font-mono font-bold text-xs uppercase tracking-wider">
+                          Синтезированное нормативное обоснование
+                        </span>
+                        <span className="text-slate-500 text-xs">|</span>
+                        <span className="text-emerald-400 font-mono text-xs">
+                          {composedSolution.nhfgSummary?.principlesCovered.length || 0} принципов ISO
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-100">
+                        Эргономическое и нормативное покрытие для стенда: {composedSolution.query.standName}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                        Ниже приведена строгая трассируемость каждого включенного паттерна к официальным стандартам ISO 9241-110, 210, 11.
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-slate-950 border border-slate-800 rounded text-xs font-mono shrink-0">
+                      <div className="text-slate-400 font-semibold mb-0.5 flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Сертификационный статус</span>
+                      </div>
+                      <div className="text-amber-400 font-bold">CONFORMANCE_NOT_ESTABLISHED</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Ложные соответствия строго исключены</div>
+                    </div>
+                  </div>
+
+                  {/* Summary of Principles Covered */}
+                  {composedSolution.nhfgSummary && (
+                    <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-lg">
+                      <div className="text-xs font-semibold text-slate-300 mb-2">
+                        Охваченные эргономические принципы диалога (ISO 9241-110):
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {composedSolution.nhfgSummary.principlesCovered.map((prinId, pIdx) => (
+                          <span
+                            key={pIdx}
+                            className="px-2.5 py-1 bg-slate-950 text-cyan-400 border border-slate-800 rounded text-xs font-mono"
+                          >
+                            {prinId}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Per-Pattern Normative Guidance Cards */}
+                  <div className="space-y-4">
+                    {composedSolution.matchedPatterns
+                      .filter(mp => mp.nhfgGuidance && mp.nhfgGuidance.length > 0)
+                      .map((mp, idx) => (
+                        <div key={idx} className="p-5 bg-slate-900 border border-slate-800 rounded-lg space-y-4">
+                          <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
+                            <div>
+                              <span className="font-mono text-cyan-400 font-bold text-xs mr-2">[{mp.pattern.id}]</span>
+                              <span className="font-bold text-slate-100 text-sm">{mp.pattern.title}</span>
+                            </div>
+                            <span className="text-xs font-mono text-emerald-400">
+                              ● {mp.evidenceStatus}
+                            </span>
+                          </div>
+
+                          {mp.nhfgGuidance?.map((g, gIdx) => (
+                            <div key={gIdx} className="space-y-3">
+                              {/* Standard & Principle Header */}
+                              <div className="p-3 bg-slate-950 rounded border border-slate-800 space-y-1">
+                                <div className="flex items-center justify-between text-xs font-mono">
+                                  <span className="text-cyan-400 font-semibold">
+                                    {g.source.standard} — {g.principle.title} ({g.principle.sectionRef})
+                                  </span>
+                                  <a
+                                    href={g.source.officialUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-[11px] text-cyan-400 hover:underline"
+                                  >
+                                    <span>Официальный URL</span>
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </div>
+                                <div className="text-[11px] text-slate-400">
+                                  {g.principle.conciseSummary}
+                                </div>
+                              </div>
+
+                              {/* Requirement Statement */}
+                              {g.requirement && (
+                                <div className="p-3 bg-slate-950/70 rounded border border-slate-800 text-xs font-mono">
+                                  <div className="text-slate-500 mb-1">
+                                    Требование нормы [{g.requirement.id}] ({g.requirement.safetyCritical ? 'Критично для безопасности' : 'Эргономика'}):
+                                  </div>
+                                  <div className="text-slate-200 font-sans italic">
+                                    "{g.requirement.statement}"
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Engineering Rationale */}
+                              <div className="text-xs text-slate-300 font-sans leading-relaxed">
+                                <span className="font-semibold text-slate-200">Обоснование Atlas: </span>
+                                {g.rationale}
+                              </div>
+
+                              {/* Status Badges */}
+                              <div className="flex flex-wrap items-center gap-2 text-xs font-mono pt-1">
+                                <span className="px-2 py-0.5 rounded bg-slate-950 text-slate-300 border border-slate-800">
+                                  Эпистемика: {g.epistemicCategory}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded border ${
+                                  g.status.scenarioVerificationStatus === 'SCENARIO_VERIFIED'
+                                    ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
+                                    : 'bg-slate-950 text-slate-400 border-slate-800'
+                                }`}>
+                                  Сценарий: {g.status.scenarioVerificationStatus}
+                                </span>
+                                <span className="px-2 py-0.5 rounded bg-amber-950/80 text-amber-400 border border-amber-800">
+                                  Сертификация: {g.status.conformanceStatus}
+                                </span>
+                              </div>
+
+                              {/* Limitations and Missing Evidence */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
+                                {g.knownLimitations.length > 0 && (
+                                  <div className="p-2.5 bg-slate-950 rounded border border-slate-800">
+                                    <div className="text-slate-400 font-semibold mb-1">Известные ограничения:</div>
+                                    <ul className="text-slate-400 text-[11px] list-disc list-inside space-y-0.5">
+                                      {g.knownLimitations.map((lim, lIdx) => (
+                                        <li key={lIdx}>{lim}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {g.missingEvidence.length > 0 && (
+                                  <div className="p-2.5 bg-slate-950 rounded border border-slate-800">
+                                    <div className="text-rose-400 font-semibold mb-1">Недостающие доказательства:</div>
+                                    <ul className="text-slate-400 text-[11px] list-disc list-inside space-y-0.5">
+                                      {g.missingEvidence.map((me, mIdx) => (
+                                        <li key={mIdx}>{me}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}

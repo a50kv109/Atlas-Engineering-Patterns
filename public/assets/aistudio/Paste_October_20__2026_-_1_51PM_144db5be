@@ -1,0 +1,951 @@
+Андрей Алексеевич, разворачиваю эталонную реализацию пяти исправлений для PATTERN LENS v0.1. Это референс, с которым можно сверять ответ Gemini.
+
+---
+
+📦 PATTERN LENS v0.1 — ЭТАЛОННАЯ РЕАЛИЗАЦИЯ 5 ИСПРАВЛЕНИЙ
+
+Структура
+
+```
+pattern_lens/
+├── fixes/
+│   ├── __init__.py
+│   ├── requires.py              # БЛОКЕР 1
+│   ├── authorization.py         # БЛОКЕР 2
+│   ├── evidence_versioning.py   # БЛОКЕР 3
+│   ├── verified_claim.py        # БЛОКЕР 4
+│   └── units.py                 # БЛОКЕР 5
+└── tests/
+    └── test_fixes.py            # Тесты для 5 исправлений
+```
+
+---
+
+📄 fixes/requires.py — БЛОКЕР 1
+
+```python
+"""
+FIX 1: REQUIRES — отсутствие ≠ нарушение
+Отсутствие ресурса трактуется как VIOLATED только при явно
+подтверждённой полноте инвентаря (inventory_is_complete=True).
+"""
+
+from typing import Tuple, List, Any, Set
+from enum import Enum
+
+
+class ConstraintVerdict(str, Enum):
+    SATISFIED = "SATISFIED"
+    VIOLATED = "VIOLATED"
+    UNKNOWN = "UNKNOWN"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+# Нормализованные статусы
+_POSITIVE_STATUSES: Set[str] = {
+    "enabled", "available", "present", "active", "true", "on", "yes", "1"
+}
+_NEGATIVE_STATUSES: Set[str] = {
+    "disabled", "unavailable", "absent", "inactive", "false", "off", "no", "0"
+}
+
+
+def eval_requires(
+    pattern_requirement: Any,
+    query_environment: Any,
+    inventory_is_complete: bool = False
+) -> Tuple[ConstraintVerdict, List[str]]:
+    """
+    Формальная семантика оператора 'requires'.
+    
+    ВАЖНО: отсутствие ресурса в коллекции/словаре → VIOLATED
+    ТОЛЬКО при inventory_is_complete=True.
+    Иначе → UNKNOWN (неполные сведения).
+    
+    Args:
+        pattern_requirement: требуемый ресурс/флаг
+        query_environment: окружение запроса (bool, str, число, коллекция, словарь)
+        inventory_is_complete: True, если окружение — полный инвентарь
+    
+    Returns:
+        (вердикт, список флагов)
+    """
+    # 1. None → UNKNOWN
+    if query_environment is None:
+        return ConstraintVerdict.UNKNOWN, ["missing_requirement_data"]
+    
+    # 2. bool (строгая проверка ДО int, т.к. isinstance(False, int) == True)
+    if isinstance(query_environment, bool):
+        if query_environment is True:
+            return ConstraintVerdict.SATISFIED, []
+        else:
+            return ConstraintVerdict.VIOLATED, []
+    
+    # 3. Числа (int, float) — НЕ логические флаги
+    if isinstance(query_environment, (int, float)):
+        return ConstraintVerdict.UNKNOWN, ["numeric_value_not_a_flag"]
+    
+    # 4. Строки
+    if isinstance(query_environment, str):
+        normalized = query_environment.strip().lower()
+        if normalized in _POSITIVE_STATUSES:
+            return ConstraintVerdict.SATISFIED, []
+        elif normalized in _NEGATIVE_STATUSES:
+            return ConstraintVerdict.VIOLATED, []
+        else:
+            return ConstraintVerdict.UNKNOWN, [f"unrecognized_status_string: '{query_environment}'"]
+    
+    # 5. Коллекции (list, set, tuple)
+    if isinstance(query_environment, (list, set, tuple)):
+        req_key = str(pattern_requirement).strip().lower()
+        normalized_collection = {str(item).strip().lower() for item in query_environment}
+        
+        if req_key in normalized_collection:
+            return ConstraintVerdict.SATISFIED, []
+        
+        # Элемента нет — VIOLATED только при полном инвентаре
+        if inventory_is_complete:
+            return ConstraintVerdict.VIOLATED, [
+                f"required_capability_absent: '{pattern_requirement}'"
+            ]
+        else:
+            return ConstraintVerdict.UNKNOWN, ["incomplete_inventory"]
+    
+    # 6. Словарь
+    if isinstance(query_environment, dict):
+        if pattern_requirement not in query_environment:
+            if inventory_is_complete:
+                return ConstraintVerdict.VIOLATED, [
+                    f"required_key_absent: '{pattern_requirement}'"
+                ]
+            else:
+                return ConstraintVerdict.UNKNOWN, ["incomplete_inventory"]
+        
+        sub_val = query_environment[pattern_requirement]
+        # Рекурсивная проверка значения (inventory полный для вложенного)
+        return eval_requires(True, sub_val, inventory_is_complete=True)
+    
+    # 7. Иное
+    return ConstraintVerdict.UNKNOWN, ["unsupported_environment_type"]
+```
+
+---
+
+📄 fixes/authorization.py — БЛОКЕР 2
+
+```python
+"""
+FIX 2: AUTHORIZATION — FAILED ≠ отсутствие проверки
+Раздельная обработка FAILED, NOT_EXECUTED, INCONCLUSIVE, отсутствия.
+"""
+
+from typing import List, Set, Dict, Optional
+from enum import Enum
+from dataclasses import dataclass
+
+
+class ApplicationAuthorization(str, Enum):
+    AUTHORIZED = "AUTHORIZED"
+    CONDITIONAL = "CONDITIONAL"
+    DENIED = "DENIED"
+
+
+class ConstraintSeverity(str, Enum):
+    SAFETY = "SAFETY"
+    FUNCTIONAL = "FUNCTIONAL"
+    INFORMATIONAL = "INFORMATIONAL"
+
+
+class EvidenceSeverity(str, Enum):
+    CRITICAL = "CRITICAL"
+    MAJOR = "MAJOR"
+    MINOR = "MINOR"
+
+
+class EvidenceResult(str, Enum):
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+    INCONCLUSIVE = "INCONCLUSIVE"
+    NOT_EXECUTED = "NOT_EXECUTED"
+
+
+class ConstraintVerdict(str, Enum):
+    SATISFIED = "SATISFIED"
+    VIOLATED = "VIOLATED"
+    UNKNOWN = "UNKNOWN"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+# Матрица последствий для обязательных claim_id
+# (severity, result) -> action
+_MANDATORY_CONSEQUENCES = {
+    # CRITICAL
+    (EvidenceSeverity.CRITICAL, EvidenceResult.PASSED): "OK",
+    (EvidenceSeverity.CRITICAL, EvidenceResult.FAILED): "DENIED",
+    (EvidenceSeverity.CRITICAL, EvidenceResult.NOT_EXECUTED): "DENIED",
+    (EvidenceSeverity.CRITICAL, EvidenceResult.INCONCLUSIVE): "DENIED",
+    (EvidenceSeverity.CRITICAL, None): "DENIED",  # отсутствует
+    # MAJOR
+    (EvidenceSeverity.MAJOR, EvidenceResult.PASSED): "OK",
+    (EvidenceSeverity.MAJOR, EvidenceResult.FAILED): "DENIED",
+    (EvidenceSeverity.MAJOR, EvidenceResult.NOT_EXECUTED): "CONDITIONAL",
+    (EvidenceSeverity.MAJOR, EvidenceResult.INCONCLUSIVE): "CONDITIONAL",
+    (EvidenceSeverity.MAJOR, None): "CONDITIONAL",
+    # MINOR
+    (EvidenceSeverity.MINOR, EvidenceResult.PASSED): "OK",
+    (EvidenceSeverity.MINOR, EvidenceResult.FAILED): "CONDITIONAL",
+    (EvidenceSeverity.MINOR, EvidenceResult.NOT_EXECUTED): "CONDITIONAL",
+    (EvidenceSeverity.MINOR, EvidenceResult.INCONCLUSIVE): "CONDITIONAL",
+    (EvidenceSeverity.MINOR, None): "CONDITIONAL",
+}
+
+_ACTION_PRIORITY = {"DENIED": 2, "CONDITIONAL": 1, "OK": 0}
+
+
+def compute_authorization(
+    pattern,  # PatternRecord
+    constraint_results: list,
+    linked_evidence: list,
+    strict_safety_mode: bool = True
+) -> ApplicationAuthorization:
+    """
+    Вычисление авторизации с раздельной обработкой FAILED/NOT_EXECUTED/INCONCLUSIVE.
+    
+    Правила (по приоритету):
+    1. Любой VIOLATED hard constraint (SAFETY/FUNCTIONAL) → DENIED
+    2. SAFETY UNKNOWN → DENIED
+    3. Обязательное свидетельство (из mandatory_claim_ids) → проверка по матрице
+    4. FUNCTIONAL UNKNOWN в constraints → CONDITIONAL
+    5. Иначе → AUTHORIZED
+    """
+    # === Шаг 1: Проверка прямых нарушений ===
+    has_violation = any(
+        cr.verdict == ConstraintVerdict.VIOLATED
+        and cr.severity in {ConstraintSeverity.SAFETY, ConstraintSeverity.FUNCTIONAL}
+        for cr in constraint_results
+    )
+    if has_violation:
+        return ApplicationAuthorization.DENIED
+    
+    # === Шаг 2: SAFETY UNKNOWN ===
+    has_safety_unknown = any(
+        cr.verdict == ConstraintVerdict.UNKNOWN
+        and cr.severity == ConstraintSeverity.SAFETY
+        for cr in constraint_results
+    )
+    if has_safety_unknown:
+        return ApplicationAuthorization.DENIED
+    
+    # === Шаг 3: Обязательные claim_id ===
+    # Фильтрация свидетельств текущей версии
+    current_version_evidence = [
+        ev for ev in linked_evidence
+        if ev.linked_pattern_id == pattern.pattern_id
+        and ev.object_version == pattern.version
+    ]
+    
+    # Словарь claim_id -> список свидетельств
+    evidence_by_claim: Dict[str, List] = {}
+    for ev in current_version_evidence:
+        evidence_by_claim.setdefault(ev.claim_id, []).append(ev)
+    
+    # Обход mandatory_claim_ids
+    worst_action = "OK"
+    for m_claim_id in pattern.mandatory_claim_ids:
+        evidence_list = evidence_by_claim.get(m_claim_id, [])
+        
+        if not evidence_list:
+            # Отсутствует — определить severity по паттерну
+            # (предполагаем CRITICAL по умолчанию для safety_mode)
+            if strict_safety_mode:
+                severity = EvidenceSeverity.CRITICAL
+            else:
+                severity = EvidenceSeverity.MAJOR
+            action = _MANDATORY_CONSEQUENCES[(severity, None)]
+        else:
+            # Выбор канонического свидетельства (детерминированно)
+            # НО: если есть FAILED — он имеет приоритет
+            failed_evidence = [ev for ev in evidence_list if ev.result == EvidenceResult.FAILED]
+            
+            if failed_evidence:
+                # FAILED не игнорируется даже при наличии PASSED
+                canonical = max(failed_evidence, key=lambda e: (e.severity.value, e.evidence_id))
+                action = _MANDATORY_CONSEQUENCES.get(
+                    (canonical.severity, EvidenceResult.FAILED), "DENIED"
+                )
+            else:
+                # Нет FAILED — выбираем по приоритету
+                canonical = _select_canonical(evidence_list)
+                action = _MANDATORY_CONSEQUENCES.get(
+                    (canonical.severity, canonical.result), "CONDITIONAL"
+                )
+        
+        # Аккумуляция худшего действия
+        if _ACTION_PRIORITY[action] > _ACTION_PRIORITY[worst_action]:
+            worst_action = action
+        
+        if worst_action == "DENIED":
+            return ApplicationAuthorization.DENIED
+    
+    if worst_action == "CONDITIONAL":
+        return ApplicationAuthorization.CONDITIONAL
+    
+    # === Шаг 4: FUNCTIONAL UNKNOWN в constraints ===
+    has_functional_unknown = any(
+        cr.verdict == ConstraintVerdict.UNKNOWN
+        and cr.severity == ConstraintSeverity.FUNCTIONAL
+        for cr in constraint_results
+    )
+    if has_functional_unknown:
+        return ApplicationAuthorization.CONDITIONAL
+    
+    # === Шаг 5: AUTHORIZED ===
+    return ApplicationAuthorization.AUTHORIZED
+
+
+def _select_canonical(evidence_list: list):
+    """Детерминированный выбор одного свидетельства (при отсутствии FAILED)"""
+    priority = {
+        EvidenceResult.PASSED: 0,
+        EvidenceResult.INCONCLUSIVE: 1,
+        EvidenceResult.NOT_EXECUTED: 2,
+    }
+    return min(evidence_list, key=lambda e: (
+        priority.get(e.result, 3),
+        -int(e.timestamp or "0"),
+        e.evidence_id
+    ))
+```
+
+---
+
+📄 fixes/evidence_versioning.py — БЛОКЕР 3
+
+```python
+"""
+FIX 3: EVIDENCE VERSIONING
+Все свидетельства проверяются на pattern_id и object_version.
+Детерминированное правило для нескольких свидетельств с одним claim_id.
+"""
+
+from typing import List, Optional, Dict
+from enum import Enum
+
+
+class EvidenceResult(str, Enum):
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+    INCONCLUSIVE = "INCONCLUSIVE"
+    NOT_EXECUTED = "NOT_EXECUTED"
+
+
+_RESULT_PRIORITY = {
+    EvidenceResult.PASSED: 0,
+    EvidenceResult.FAILED: 1,
+    EvidenceResult.INCONCLUSIVE: 2,
+    EvidenceResult.NOT_EXECUTED: 3,
+}
+
+
+def filter_evidence_for_version(
+    evidence_list: List,
+    pattern_id: str,
+    pattern_version: str
+) -> List:
+    """
+    Оставляет только свидетельства, относящиеся к текущей версии паттерна.
+    
+    Правило: ev.linked_pattern_id == pattern_id AND ev.object_version == pattern_version.
+    """
+    return [
+        ev for ev in evidence_list
+        if ev.linked_pattern_id == pattern_id
+        and ev.object_version == pattern_version
+    ]
+
+
+def select_canonical_evidence(evidence_list: List) -> Optional[object]:
+    """
+    Детерминированный выбор одного свидетельства из нескольких
+    с одинаковым claim_id.
+    
+    Приоритет:
+    1. PASSED (наивысший)
+    2. FAILED
+    3. INCONCLUSIVE
+    4. NOT_EXECUTED (низший)
+    
+    При равенстве result:
+    - Более поздний timestamp
+    - Более надёжный verifier (не "unknown"/"none"/"unverified")
+    - Лексикографически меньший evidence_id (детерминизм)
+    """
+    if not evidence_list:
+        return None
+    
+    def sort_key(ev):
+        # Приоритет результата
+        result_rank = _RESULT_PRIORITY.get(ev.result, 99)
+        
+        # Timestamp (позже = лучше; инвертируем для min)
+        try:
+            ts = -int(ev.timestamp or "0")
+        except (ValueError, TypeError):
+            ts = 0
+        
+        # Надёжность верификатора
+        verifier = (ev.verifier or "").strip().lower()
+        verifier_unreliable = verifier in {"", "unknown", "none", "unverified"}
+        verifier_rank = 1 if verifier_unreliable else 0
+        
+        return (result_rank, verifier_rank, ts, ev.evidence_id)
+    
+    return min(evidence_list, key=sort_key)
+
+
+def has_critical_failure(
+    evidence_list: List,
+    pattern_id: str,
+    pattern_version: str
+) -> bool:
+    """
+    Проверяет наличие CRITICAL + FAILED среди свидетельств ТЕКУЩЕЙ версии.
+    
+    ВАЖНО: старая версия НЕ блокирует новую.
+    """
+    current = filter_evidence_for_version(evidence_list, pattern_id, pattern_version)
+    
+    for ev in current:
+        severity = getattr(ev, "severity", None)
+        severity_value = severity.value if hasattr(severity, "value") else str(severity)
+        
+        if severity_value == "CRITICAL" and ev.result == EvidenceResult.FAILED:
+            return True
+    
+    return False
+
+
+def group_evidence_by_claim(evidence_list: List) -> Dict[str, List]:
+    """Группировка свидетельств по claim_id"""
+    result: Dict[str, List] = {}
+    for ev in evidence_list:
+        result.setdefault(ev.claim_id, []).append(ev)
+    return result
+```
+
+---
+
+📄 fixes/verified_claim.py — БЛОКЕР 4
+
+```python
+"""
+FIX 4: VERIFIED CLAIM — только явная связка
+Автоподстановка mandatory_claim_ids запрещена.
+"""
+
+from typing import List, Set
+
+
+VALID_VERIFICATION_METHODS: Set[str] = {
+    "AUTOMATED_UNIT_TEST",
+    "EMPIRICAL_STUDY",
+    "FORMAL_PROOF",
+    "HARDWARE_BENCH_TEST",
+}
+
+_UNRELIABLE_VERIFIERS: Set[str] = {"", "unknown", "none", "unverified"}
+
+
+def check_verified_claim_for_intent(
+    pattern,  # PatternRecord
+    target_claim_ids: Set[str],
+    evidence_records: List
+) -> bool:
+    """
+    Возвращает True ТОЛЬКО при явной связке claim_id с намерением.
+    
+    Правила:
+    1. target_claim_ids НЕ пуст (явно задан запросом).
+    2. ev.claim_id ∈ target_claim_ids.
+    3. ev.linked_pattern_id == pattern.pattern_id.
+    4. ev.object_version == pattern.version.
+    5. ev.result == PASSED.
+    6. ev.method ∈ VALID_VERIFICATION_METHODS.
+    7. ev.verifier не пуст и не в {"unknown", "none", "unverified"}.
+    
+    Если target_claim_ids пуст → False (нет явной связки).
+    mandatory_claim_ids НЕ подставляются автоматически.
+    """
+    # 1. Явная связка обязательна
+    if not target_claim_ids:
+        return False
+    
+    for ev in evidence_records:
+        # 2. claim_id в цели
+        if ev.claim_id not in target_claim_ids:
+            continue
+        
+        # 3. Привязка к паттерну
+        if ev.linked_pattern_id != pattern.pattern_id:
+            continue
+        
+        # 4. Версия
+        if ev.object_version != pattern.version:
+            continue
+        
+        # 5. Результат
+        if ev.result != "PASSED":
+            continue
+        
+        # 6. Метод
+        if ev.method not in VALID_VERIFICATION_METHODS:
+            continue
+        
+        # 7. Верификатор
+        verifier = (ev.verifier or "").strip().lower()
+        if verifier in _UNRELIABLE_VERIFIERS:
+            continue
+        
+        return True
+    
+    return False
+```
+
+---
+
+📄 fixes/units.py — БЛОКЕР 5
+
+```python
+"""
+FIX 5: UNITS — согласованность обязательна
+Несовместимые или противоречивые единицы → UNKNOWN (никогда VIOLATED).
+"""
+
+import math
+from typing import Tuple, List, Any, Optional
+from enum import Enum
+
+
+class ConstraintVerdict(str, Enum):
+    SATISFIED = "SATISFIED"
+    VIOLATED = "VIOLATED"
+    UNKNOWN = "UNKNOWN"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+def extract_value_and_unit(value: Any) -> Tuple[Any, Optional[str]]:
+    """
+    Извлекает значение и единицу.
+    
+    Поддерживаемые формы:
+    - {"value": 16, "unit": "GB"}
+    - (16, "GB")
+    - [16, "GB"]
+    - 16 (без единицы)
+    """
+    if isinstance(value, dict):
+        return value.get("value"), value.get("unit")
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return value[0], value[1]
+    return value, None
+
+
+def eval_numeric_comparison(
+    operator: str,
+    pattern_threshold: Any,
+    query_environment: Any,
+    unit_required: Optional[str] = None
+) -> Tuple[ConstraintVerdict, List[str]]:
+    """
+    Числовое сравнение с обязательной согласованностью единиц.
+    
+    Правила единиц:
+    1. Если unit_required задан:
+       - p_unit должен быть None ИЛИ равен unit_required.
+         Если p_unit задан и ≠ unit_required → UNKNOWN ["unit_conflict_pattern_vs_required"].
+       - q_unit должен быть задан и равен unit_required.
+         Если q_unit отсутствует → UNKNOWN ["missing_mandatory_unit"].
+         Если q_unit ≠ unit_required → UNKNOWN ["unit_mismatch"].
+    2. Если unit_required НЕ задан, но p_unit задан:
+       - q_unit должен быть задан и равен p_unit.
+         Иначе → UNKNOWN ["unit_mismatch"] или ["missing_mandatory_unit"].
+    3. Если ни unit_required, ни p_unit не заданы:
+       - q_unit игнорируется (сравнение без единиц).
+    4. Любое несовпадение единиц → UNKNOWN (никогда VIOLATED).
+    5. NaN/Inf → UNKNOWN ["non_finite_numeric_value"].
+    6. bool → UNKNOWN ["boolean_cannot_be_numeric"].
+    """
+    # 1. Защита от bool (строгая проверка ДО int)
+    if isinstance(query_environment, bool) or isinstance(pattern_threshold, bool):
+        return ConstraintVerdict.UNKNOWN, ["boolean_cannot_be_numeric"]
+    
+    # 2. Извлечение значений и единиц
+    q_val, q_unit = extract_value_and_unit(query_environment)
+    p_val, p_unit = extract_value_and_unit(pattern_threshold)
+    
+    # 3. Нормализация единиц
+    q_unit_norm = q_unit.strip().lower() if isinstance(q_unit, str) else None
+    p_unit_norm = p_unit.strip().lower() if isinstance(p_unit, str) else None
+    req_unit_norm = unit_required.strip().lower() if isinstance(unit_required, str) else None
+    
+    # 4. Проверка согласованности единиц
+    if req_unit_norm is not None:
+        # unit_required задан
+        if p_unit_norm is not None and p_unit_norm != req_unit_norm:
+            return ConstraintVerdict.UNKNOWN, [
+                f"unit_conflict_pattern_vs_required: pattern='{p_unit}', required='{unit_required}'"
+            ]
+        if q_unit_norm is None:
+            return ConstraintVerdict.UNKNOWN, [
+                f"missing_mandatory_unit: expected '{unit_required}'"
+            ]
+        if q_unit_norm != req_unit_norm:
+            return ConstraintVerdict.UNKNOWN, [
+                f"unit_mismatch: got '{q_unit}', expected '{unit_required}'"
+            ]
+    elif p_unit_norm is not None:
+        # unit_required не задан, но p_unit задан
+        if q_unit_norm is None:
+            return ConstraintVerdict.UNKNOWN, [
+                f"missing_mandatory_unit: expected '{p_unit}'"
+            ]
+        if q_unit_norm != p_unit_norm:
+            return ConstraintVerdict.UNKNOWN, [
+                f"unit_mismatch: got '{q_unit}', expected '{p_unit}'"
+            ]
+    # else: ни unit_required, ни p_unit — q_unit игнорируется
+    
+    # 5. Проверка числовых типов
+    if not isinstance(q_val, (int, float)) or not isinstance(p_val, (int, float)):
+        return ConstraintVerdict.UNKNOWN, ["type_mismatch_not_a_number"]
+    
+    # 6. Защита от NaN/Inf
+    if not math.isfinite(q_val) or not math.isfinite(p_val):
+        return ConstraintVerdict.UNKNOWN, ["non_finite_numeric_value"]
+    
+    # 7. Сравнение
+    if operator == "gte":
+        return (ConstraintVerdict.SATISFIED if q_val >= p_val else ConstraintVerdict.VIOLATED), []
+    elif operator == "lte":
+        return (ConstraintVerdict.SATISFIED if q_val <= p_val else ConstraintVerdict.VIOLATED), []
+    elif operator == "eq":
+        return (ConstraintVerdict.SATISFIED if q_val == p_val else ConstraintVerdict.VIOLATED), []
+    elif operator == "neq":
+        return (ConstraintVerdict.SATISFIED if q_val != p_val else ConstraintVerdict.VIOLATED), []
+    else:
+        return ConstraintVerdict.UNKNOWN, [f"unsupported_numeric_operator: '{operator}'"]
+```
+
+---
+
+📄 tests/test_fixes.py — тесты для 5 исправлений
+
+```python
+"""
+Тесты для 5 исправлений PATTERN LENS v0.1
+"""
+
+import pytest
+from fixes.requires import eval_requires
+from fixes.authorization import (
+    compute_authorization, ApplicationAuthorization,
+    ConstraintSeverity, EvidenceSeverity, EvidenceResult, ConstraintVerdict
+)
+from fixes.evidence_versioning import (
+    filter_evidence_for_version, select_canonical_evidence,
+    has_critical_failure, group_evidence_by_claim
+)
+from fixes.verified_claim import check_verified_claim_for_intent
+from fixes.units import eval_numeric_comparison
+
+
+# ============ FIX 1: REQUIRES ============
+
+def test_fix1_missing_key_incomplete_inventory():
+    """Отсутствие ключа при неполном инвентаре → UNKNOWN"""
+    verdict, flags = eval_requires("foo", {"bar": True}, inventory_is_complete=False)
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert "incomplete_inventory" in flags
+
+
+def test_fix1_missing_key_complete_inventory():
+    """Отсутствие ключа при полном инвентаре → VIOLATED"""
+    verdict, flags = eval_requires("foo", {"bar": True}, inventory_is_complete=True)
+    assert verdict == ConstraintVerdict.VIOLATED
+
+
+def test_fix1_missing_in_collection_incomplete():
+    """Отсутствие в коллекции при неполном инвентаре → UNKNOWN"""
+    verdict, flags = eval_requires("capability_x", ["a", "b"], inventory_is_complete=False)
+    assert verdict == ConstraintVerdict.UNKNOWN
+
+
+def test_fix1_missing_in_collection_complete():
+    """Отсутствие в коллекции при полном инвентаре → VIOLATED"""
+    verdict, flags = eval_requires("capability_x", ["a", "b"], inventory_is_complete=True)
+    assert verdict == ConstraintVerdict.VIOLATED
+
+
+def test_fix1_bool_false_violated():
+    """bool False → VIOLATED"""
+    verdict, _ = eval_requires("feature", False)
+    assert verdict == ConstraintVerdict.VIOLATED
+
+
+def test_fix1_numeric_not_a_flag():
+    """Число → UNKNOWN numeric_value_not_a_flag"""
+    verdict, flags = eval_requires("feature", 0)
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert "numeric_value_not_a_flag" in flags
+
+
+# ============ FIX 2: AUTHORIZATION ============
+
+class MockPattern:
+    def __init__(self, pid="pat-001", version="1.0", mandatory=None):
+        self.pattern_id = pid
+        self.version = version
+        self.mandatory_claim_ids = mandatory or []
+
+
+class MockEvidence:
+    def __init__(self, eid, claim_id, result, severity=EvidenceSeverity.MAJOR,
+                 version="1.0", pid="pat-001", verifier="ci"):
+        self.evidence_id = eid
+        self.claim_id = claim_id
+        self.result = result
+        self.severity = severity
+        self.object_version = version
+        self.linked_pattern_id = pid
+        self.verifier = verifier
+        self.method = "AUTOMATED_UNIT_TEST"
+        self.timestamp = "1000"
+
+
+class MockConstraint:
+    def __init__(self, verdict, severity=ConstraintSeverity.FUNCTIONAL, subject="test"):
+        self.verdict = verdict
+        self.severity = severity
+        self.subject = subject
+
+
+def test_fix2_mandatory_major_failed_denied():
+    """Обязательное MAJOR FAILED → DENIED (не AUTHORIZED)"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.FAILED,
+                              severity=EvidenceSeverity.MAJOR)]
+    auth = compute_authorization(pattern, [], evidence)
+    assert auth == ApplicationAuthorization.DENIED
+
+
+def test_fix2_mandatory_critical_not_executed_denied():
+    """Обязательное CRITICAL NOT_EXECUTED → DENIED"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.NOT_EXECUTED,
+                              severity=EvidenceSeverity.CRITICAL)]
+    auth = compute_authorization(pattern, [], evidence)
+    assert auth == ApplicationAuthorization.DENIED
+
+
+def test_fix2_mandatory_major_not_executed_conditional():
+    """Обязательное MAJOR NOT_EXECUTED → CONDITIONAL"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.NOT_EXECUTED,
+                              severity=EvidenceSeverity.MAJOR)]
+    auth = compute_authorization(pattern, [], evidence)
+    assert auth == ApplicationAuthorization.CONDITIONAL
+
+
+def test_fix2_mandatory_missing_conditional():
+    """Обязательное MAJOR отсутствует → CONDITIONAL"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    auth = compute_authorization(pattern, [], [], strict_safety_mode=False)
+    assert auth == ApplicationAuthorization.CONDITIONAL
+
+
+def test_fix2_mandatory_missing_strict_denied():
+    """Обязательное CRITICAL отсутствует (strict) → DENIED"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    auth = compute_authorization(pattern, [], [], strict_safety_mode=True)
+    assert auth == ApplicationAuthorization.DENIED
+
+
+def test_fix2_failed_not_ignored_by_passed():
+    """FAILED не игнорируется при наличии PASSED"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    evidence = [
+        MockEvidence("evid-1", "claim-1", EvidenceResult.PASSED),
+        MockEvidence("evid-2", "claim-1", EvidenceResult.FAILED,
+                     severity=EvidenceSeverity.CRITICAL),
+    ]
+    auth = compute_authorization(pattern, [], evidence)
+    assert auth == ApplicationAuthorization.DENIED
+
+
+def test_fix2_all_passed_authorized():
+    """Все обязательные PASSED → AUTHORIZED"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.PASSED)]
+    auth = compute_authorization(pattern, [], evidence)
+    assert auth == ApplicationAuthorization.AUTHORIZED
+
+
+# ============ FIX 3: EVIDENCE VERSIONING ============
+
+def test_fix3_old_version_filtered():
+    """Старая версия не участвует в проверке"""
+    evidence = [
+        MockEvidence("evid-old", "claim-1", EvidenceResult.FAILED,
+                     severity=EvidenceSeverity.CRITICAL, version="0.9"),
+    ]
+    filtered = filter_evidence_for_version(evidence, "pat-001", "1.0")
+    assert len(filtered) == 0
+
+
+def test_fix3_old_failure_not_blocking_new():
+    """Старый FAILED не блокирует новую версию"""
+    evidence = [
+        MockEvidence("evid-old", "claim-1", EvidenceResult.FAILED,
+                     severity=EvidenceSeverity.CRITICAL, version="0.9"),
+        MockEvidence("evid-new", "claim-1", EvidenceResult.PASSED, version="1.0"),
+    ]
+    assert not has_critical_failure(evidence, "pat-001", "1.0")
+
+
+def test_fix3_canonical_priority_passed():
+    """PASSED имеет приоритет при выборе канонического"""
+    evidence = [
+        MockEvidence("evid-a", "claim-1", EvidenceResult.NOT_EXECUTED),
+        MockEvidence("evid-b", "claim-1", EvidenceResult.PASSED),
+    ]
+    canonical = select_canonical_evidence(evidence)
+    assert canonical.evidence_id == "evid-b"
+
+
+def test_fix3_deterministic_evidence_id():
+    """При полном равенстве — лексикографически меньший evidence_id"""
+    evidence = [
+        MockEvidence("evid-b", "claim-1", EvidenceResult.PASSED),
+        MockEvidence("evid-a", "claim-1", EvidenceResult.PASSED),
+    ]
+    canonical = select_canonical_evidence(evidence)
+    assert canonical.evidence_id == "evid-a"
+
+
+# ============ FIX 4: VERIFIED CLAIM ============
+
+def test_fix4_empty_targets_returns_false():
+    """Пустые target_claim_ids → False (без автоподстановки)"""
+    pattern = MockPattern(mandatory=["claim-1"])
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.PASSED)]
+    result = check_verified_claim_for_intent(pattern, set(), evidence)
+    assert result is False
+
+
+def test_fix4_explicit_target_verified():
+    """Явный target_claim_id + PASSED → True"""
+    pattern = MockPattern()
+    evidence = [MockEvidence("evid-1", "claim-target", EvidenceResult.PASSED)]
+    result = check_verified_claim_for_intent(pattern, {"claim-target"}, evidence)
+    assert result is True
+
+
+def test_fix4_wrong_version_false():
+    """Свидетельство другой версии → False"""
+    pattern = MockPattern(version="1.0")
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.PASSED, version="0.9")]
+    result = check_verified_claim_for_intent(pattern, {"claim-1"}, evidence)
+    assert result is False
+
+
+def test_fix4_unreliable_verifier_false():
+    """Ненадёжный верификатор → False"""
+    pattern = MockPattern()
+    evidence = [MockEvidence("evid-1", "claim-1", EvidenceResult.PASSED,
+                              verifier="unknown")]
+    result = check_verified_claim_for_intent(pattern, {"claim-1"}, evidence)
+    assert result is False
+
+
+# ============ FIX 5: UNITS ============
+
+def test_fix5_matching_units_satisfied():
+    """Совпадающие единицы → SATISFIED"""
+    verdict, _ = eval_numeric_comparison(
+        "gte", {"value": 16, "unit": "GB"}, {"value": 32, "unit": "GB"}
+    )
+    assert verdict == ConstraintVerdict.SATISFIED
+
+
+def test_fix5_unit_mismatch_unknown():
+    """Несовпадение единиц → UNKNOWN"""
+    verdict, flags = eval_numeric_comparison(
+        "gte", {"value": 16, "unit": "GB"}, {"value": 32, "unit": "MB"}
+    )
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert any("unit_mismatch" in f for f in flags)
+
+
+def test_fix5_missing_unit_unknown():
+    """Отсутствие обязательной единицы → UNKNOWN"""
+    verdict, flags = eval_numeric_comparison(
+        "gte", {"value": 16, "unit": "GB"}, 32
+    )
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert any("missing_mandatory_unit" in f for f in flags)
+
+
+def test_fix5_unit_conflict_pattern_vs_required():
+    """unit_required ≠ p_unit → UNKNOWN"""
+    verdict, flags = eval_numeric_comparison(
+        "gte",
+        {"value": 16, "unit": "GB"},
+        {"value": 32, "unit": "MB"},
+        unit_required="MB"
+    )
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert any("unit_conflict_pattern_vs_required" in f for f in flags)
+
+
+def test_fix5_nan_unknown():
+    """NaN → UNKNOWN"""
+    verdict, flags = eval_numeric_comparison("gte", 10, float("nan"))
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert "non_finite_numeric_value" in flags
+
+
+def test_fix5_bool_unknown():
+    """bool → UNKNOWN"""
+    verdict, flags = eval_numeric_comparison("gte", 10, True)
+    assert verdict == ConstraintVerdict.UNKNOWN
+    assert "boolean_cannot_be_numeric" in flags
+```
+
+---
+
+✅ СВОДНАЯ ТАБЛИЦА ИСПРАВЛЕНИЙ
+
+№ Блокер Файл Ключевое правило
+1 REQUIRES requires.py VIOLATED только при inventory_is_complete=True
+2 AUTHORIZATION authorization.py Матрица (severity, result) → action, FAILED ≠ NOT_EXECUTED
+3 EVIDENCE VERSIONING evidence_versioning.py Фильтр по pattern_id + object_version, детерминированный выбор
+4 VERIFIED CLAIM verified_claim.py target_claim_ids обязателен, без автоподстановки
+5 UNITS units.py Любое несовпадение единиц → UNKNOWN
+
+---
+
+📌 ЧТО ПЕРЕДАТЬ GEMINI
+
+Скопируйте этот код как эталонную реализацию 5 исправлений:
+
+«Вот эталонная реализация 5 исправлений. Все тесты для них написаны. Реализуй:
+
+1. AtlasAdapterSource (JSONL)
+2. SemanticAdapter (интерфейс)
+3. CLI
+
+Не меняй логику 5 исправлений. Используй как референс.»
+
+---
+
+Если нужно — могу развернуть полный интеграционный тест (18 тестов), объединяющий все 5 исправлений с базовым движком.
