@@ -16,6 +16,7 @@ Pure Python Standard Library (Python 3.10+)
 from dataclasses import dataclass, field
 from typing import List, Dict, Set, Optional, Any
 from enum import Enum
+import math
 
 from .models import ParsedQuery, SearchResult, ApplicationAuthorization, SearchEligibility
 from .retrieval import parse_query
@@ -79,37 +80,102 @@ class SemanticInterpretationReport:
 
 def validate_semantic_interpretation_report(report: Any) -> None:
     """
-    Проверяет корректность структуры и полей SemanticInterpretationReport.
+    Проверяет корректность структуры и всех полей SemanticInterpretationReport
+    и вложенных объектов DisambiguatedTerm.
     Выбрасывает TypeError или ValueError при обнаружении нарушений схемы.
     """
     if not isinstance(report, SemanticInterpretationReport):
         raise TypeError(f"Expected SemanticInterpretationReport instance, got {type(report).__name__}")
 
-    # 1. Проверка статуса
-    if not isinstance(report.status, InterpretationStatus):
-        valid_status_values = {s.value for s in InterpretationStatus}
-        if str(report.status) not in valid_status_values:
-            raise ValueError(f"Invalid InterpretationStatus: {report.status}")
+    # 1. Проверка статуса (InterpretationStatus)
+    if isinstance(report.status, InterpretationStatus):
+        status_enum = report.status
+    elif isinstance(report.status, str) and report.status in InterpretationStatus._value2member_map_:
+        status_enum = InterpretationStatus(report.status)
+    else:
+        raise ValueError(f"Invalid InterpretationStatus: {report.status}")
 
-    # 2. Обязательное поле source_language: непустая строка
-    if not isinstance(report.source_language, str) or not report.source_language.strip():
+    # 2. Поле source_language: строго непустая строка
+    if not isinstance(report.source_language, str):
+        raise TypeError("source_language must be a non-empty string")
+    if not report.source_language.strip():
         raise ValueError("source_language must be a non-empty string")
 
-    # 3. Обязательное поле primary_intent: строка
+    # 3. Поле primary_intent: строго строка
     if not isinstance(report.primary_intent, str):
-        raise ValueError("primary_intent must be a string")
+        raise TypeError("primary_intent must be a string")
 
-    # 4. Поле is_fallback_mode: bool
-    if not isinstance(report.is_fallback_mode, bool):
-        raise ValueError("is_fallback_mode must be a boolean")
+    # 4. Поле is_fallback_mode: строго bool (в Python bool является подклассом int, проверяем точно)
+    if type(report.is_fallback_mode) is not bool:
+        raise TypeError("is_fallback_mode must be a boolean")
 
-    # 5. clarification_options: список строк
-    if not isinstance(report.clarification_options, list) or not all(isinstance(opt, str) for opt in report.clarification_options):
-        raise ValueError("clarification_options must be a list of strings")
+    # 5. Числовые поля отчета: integrity_score и tensor_divergence (None или конечное число, не bool)
+    if report.integrity_score is not None:
+        if type(report.integrity_score) is bool or not isinstance(report.integrity_score, (int, float)) or not math.isfinite(report.integrity_score):
+            raise ValueError("integrity_score must be a finite number or None")
 
-    # 6. identified_concepts: список DisambiguatedTerm
-    if not isinstance(report.identified_concepts, list) or not all(isinstance(c, DisambiguatedTerm) for c in report.identified_concepts):
-        raise ValueError("identified_concepts must be a list of DisambiguatedTerm")
+    if report.tensor_divergence is not None:
+        if type(report.tensor_divergence) is bool or not isinstance(report.tensor_divergence, (int, float)) or not math.isfinite(report.tensor_divergence):
+            raise ValueError("tensor_divergence must be a finite number or None")
+
+    # 6. clarification_options: список строк
+    if not isinstance(report.clarification_options, list):
+        raise TypeError("clarification_options must be a list")
+    for idx, opt in enumerate(report.clarification_options):
+        if not isinstance(opt, str):
+            raise TypeError(f"clarification_options[{idx}] must be a string")
+
+    # 7. error_details: None или строка
+    if report.error_details is not None and not isinstance(report.error_details, str):
+        raise TypeError("error_details must be a string or None")
+
+    # 8. identified_concepts: список DisambiguatedTerm с полной валидацией всех вложенных полей
+    if not isinstance(report.identified_concepts, list):
+        raise TypeError("identified_concepts must be a list")
+
+    for idx, term in enumerate(report.identified_concepts):
+        if not isinstance(term, DisambiguatedTerm):
+            raise TypeError(f"identified_concepts[{idx}] must be a DisambiguatedTerm instance")
+
+        # concept_id: непустая строка
+        if not isinstance(term.concept_id, str):
+            raise TypeError(f"DisambiguatedTerm[{idx}].concept_id must be a string")
+        if not term.concept_id.strip():
+            raise ValueError(f"DisambiguatedTerm[{idx}].concept_id cannot be empty or whitespace-only")
+
+        # canonical_term: строка
+        if not isinstance(term.canonical_term, str):
+            raise TypeError(f"DisambiguatedTerm[{idx}].canonical_term must be a string")
+
+        # source_fragment: строка
+        if not isinstance(term.source_fragment, str):
+            raise TypeError(f"DisambiguatedTerm[{idx}].source_fragment must be a string")
+
+        # sol_tag: None или строка
+        if term.sol_tag is not None and not isinstance(term.sol_tag, str):
+            raise TypeError(f"DisambiguatedTerm[{idx}].sol_tag must be a string or None")
+
+        # standard_reference: None или строка
+        if term.standard_reference is not None and not isinstance(term.standard_reference, str):
+            raise TypeError(f"DisambiguatedTerm[{idx}].standard_reference must be a string or None")
+
+        # tdi: None или конечное число, не bool
+        if term.tdi is not None:
+            if type(term.tdi) is bool or not isinstance(term.tdi, (int, float)) or not math.isfinite(term.tdi):
+                raise ValueError(f"DisambiguatedTerm[{idx}].tdi must be a finite number or None")
+
+        # polysemy_warning: None или строка
+        if term.polysemy_warning is not None and not isinstance(term.polysemy_warning, str):
+            raise TypeError(f"DisambiguatedTerm[{idx}].polysemy_warning must be a string or None")
+
+    # 9. Логическая целостность статусов
+    if status_enum == InterpretationStatus.NEEDS_CLARIFICATION:
+        if not report.clarification_options:
+            raise ValueError("clarification_options cannot be empty when status is NEEDS_CLARIFICATION")
+
+    if status_enum == InterpretationStatus.AAM_ERROR:
+        if not report.error_details or not isinstance(report.error_details, str) or not report.error_details.strip():
+            raise ValueError("error_details must be a non-empty string when status is AAM_ERROR")
 
 
 @dataclass

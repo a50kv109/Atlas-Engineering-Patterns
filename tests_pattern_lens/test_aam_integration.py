@@ -4,6 +4,7 @@ Comprehensive validation of canonical AAMPatternGateway against PatternLensEngin
 """
 
 import unittest
+import math
 from typing import Any, Dict, Optional, Set
 
 from pattern_lens.aam_gateway import (
@@ -343,6 +344,283 @@ class TestAAMGatewayIntegration(unittest.TestCase):
             res.search_result.diagnostic_candidates[0].application_authorization,
             ApplicationAuthorization.DENIED
         )
+
+    def test_13_schema_validation_field_types_and_nested_terms(self):
+        """13. Прямая проверка validate_semantic_interpretation_report на всех типах полей и вложенных терминах."""
+        def make_valid_report(**kwargs):
+            base = {
+                "status": InterpretationStatus.INTERPRETED,
+                "source_language": "ru",
+                "primary_intent": "валидный интент",
+                "is_fallback_mode": False,
+                "integrity_score": 0.95,
+                "tensor_divergence": 0.05,
+                "identified_concepts": [
+                    DisambiguatedTerm(
+                        concept_id="c-01",
+                        canonical_term="термин",
+                        source_fragment="фрагмент",
+                        sol_tag="#domain",
+                        standard_reference="ISO-123",
+                        tdi=0.12,
+                        polysemy_warning="warning"
+                    )
+                ],
+                "clarification_options": ["option 1"],
+                "error_details": None,
+            }
+            base.update(kwargs)
+            return SemanticInterpretationReport(**base)
+
+        # 13a. Валидный отчет проходит проверку без ошибок
+        valid_rep = make_valid_report()
+        validate_semantic_interpretation_report(valid_rep)
+
+        # 13b. Тип самого отчета
+        for invalid_rep in [None, {}, "string", 42, [valid_rep]]:
+            with self.subTest(invalid_rep=invalid_rep):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(invalid_rep)
+
+        # 13c. Статус отчета
+        for invalid_status in ["NOT_A_STATUS", 123, None, object()]:
+            with self.subTest(invalid_status=invalid_status):
+                with self.assertRaises(ValueError):
+                    validate_semantic_interpretation_report(make_valid_report(status=invalid_status))
+
+        # 13d. source_language: строго непустая строка
+        for bad_lang in [123, True, None, {}, []]:
+            with self.subTest(bad_lang=bad_lang):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(source_language=bad_lang))
+        for empty_lang in ["", "   ", "\t\n"]:
+            with self.subTest(empty_lang=empty_lang):
+                with self.assertRaises(ValueError):
+                    validate_semantic_interpretation_report(make_valid_report(source_language=empty_lang))
+
+        # 13e. primary_intent: строго строка
+        for bad_intent in [123, True, None, [], {}]:
+            with self.subTest(bad_intent=bad_intent):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(primary_intent=bad_intent))
+
+        # 13f. is_fallback_mode: строго bool (включая защиту от int 1/0)
+        for bad_bool in [1, 0, "true", "False", None, 1.0]:
+            with self.subTest(bad_bool=bad_bool):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(is_fallback_mode=bad_bool))
+
+        # 13g. integrity_score: None или конечное число, не bool
+        for bad_score in [True, False, float("nan"), float("inf"), float("-inf"), "0.95", [0.9]]:
+            with self.subTest(bad_score=bad_score):
+                with self.assertRaises(ValueError):
+                    validate_semantic_interpretation_report(make_valid_report(integrity_score=bad_score))
+        # Проверка допустимых значений None и конечных чисел
+        validate_semantic_interpretation_report(make_valid_report(integrity_score=None))
+        validate_semantic_interpretation_report(make_valid_report(integrity_score=0.0))
+        validate_semantic_interpretation_report(make_valid_report(integrity_score=1.0))
+
+        # 13h. tensor_divergence: None или конечное число, не bool
+        for bad_div in [True, False, float("nan"), float("inf"), float("-inf"), "0.05"]:
+            with self.subTest(bad_div=bad_div):
+                with self.assertRaises(ValueError):
+                    validate_semantic_interpretation_report(make_valid_report(tensor_divergence=bad_div))
+        validate_semantic_interpretation_report(make_valid_report(tensor_divergence=None))
+        validate_semantic_interpretation_report(make_valid_report(tensor_divergence=0.42))
+
+        # 13i. clarification_options: список строк
+        for bad_opts in ["not a list", 123, True, None, {"opt": "1"}]:
+            with self.subTest(bad_opts=bad_opts):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(clarification_options=bad_opts))
+        for bad_opts_items in [["valid", 123], [None], [True], [["nested"]]]:
+            with self.subTest(bad_opts_items=bad_opts_items):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(clarification_options=bad_opts_items))
+
+        # 13j. error_details: None или строка
+        for bad_err in [123, True, [], {}]:
+            with self.subTest(bad_err=bad_err):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(error_details=bad_err))
+
+        # 13k. identified_concepts: список DisambiguatedTerm
+        for bad_concepts in ["not a list", 123, None, {}]:
+            with self.subTest(bad_concepts=bad_concepts):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(identified_concepts=bad_concepts))
+        for bad_items in [[{"concept_id": "c1"}], ["not_a_term"], [123]]:
+            with self.subTest(bad_items=bad_items):
+                with self.assertRaises(TypeError):
+                    validate_semantic_interpretation_report(make_valid_report(identified_concepts=bad_items))
+
+        # 13l. Поля вложенного DisambiguatedTerm
+        def make_term(**kwargs):
+            base = {
+                "concept_id": "c-01",
+                "canonical_term": "термин",
+                "source_fragment": "фрагмент",
+                "sol_tag": "#tag",
+                "standard_reference": "REF",
+                "tdi": 0.5,
+                "polysemy_warning": "warning"
+            }
+            base.update(kwargs)
+            return DisambiguatedTerm(**base)
+
+        # concept_id
+        with self.assertRaises(TypeError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(concept_id=123)]))
+        with self.assertRaises(ValueError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(concept_id="")]))
+        with self.assertRaises(ValueError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(concept_id="   ")]))
+
+        # canonical_term & source_fragment
+        with self.assertRaises(TypeError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(canonical_term=None)]))
+        with self.assertRaises(TypeError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(source_fragment=123)]))
+
+        # sol_tag & standard_reference (None или str)
+        with self.assertRaises(TypeError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(sol_tag=123)]))
+        with self.assertRaises(TypeError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(standard_reference=True)]))
+
+        # tdi: None или конечное число, не bool
+        for bad_tdi in [True, False, float("nan"), float("inf"), float("-inf"), "0.5"]:
+            with self.subTest(bad_tdi=bad_tdi):
+                with self.assertRaises(ValueError):
+                    validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(tdi=bad_tdi)]))
+        # Валидные tdi
+        validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(tdi=None)]))
+        validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(tdi=0.0)]))
+        validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(tdi=100.5)]))
+
+        # polysemy_warning (None или str)
+        with self.assertRaises(TypeError):
+            validate_semantic_interpretation_report(make_valid_report(identified_concepts=[make_term(polysemy_warning=123)]))
+
+        # 13m. Логическая целостность статусов
+        # NEEDS_CLARIFICATION требует непустой clarification_options
+        with self.assertRaises(ValueError):
+            validate_semantic_interpretation_report(make_valid_report(
+                status=InterpretationStatus.NEEDS_CLARIFICATION,
+                clarification_options=[]
+            ))
+
+        # AAM_ERROR требует непустой error_details
+        with self.assertRaises(ValueError):
+            validate_semantic_interpretation_report(make_valid_report(
+                status=InterpretationStatus.AAM_ERROR,
+                error_details=None
+            ))
+        with self.assertRaises(ValueError):
+            validate_semantic_interpretation_report(make_valid_report(
+                status=InterpretationStatus.AAM_ERROR,
+                error_details=""
+            ))
+
+    def test_14_gateway_rejection_of_all_schema_violations(self):
+        """14. Сквозная проверка шлюза: любые нарушения схемы отчета или терминов возвращают AAM_ERROR без запуска поиска."""
+        faulty_reports = [
+            # Некорректный boolean (int вместо bool)
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                is_fallback_mode=1  # type: ignore
+            ),
+            # NaN в integrity_score
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                integrity_score=float("nan")
+            ),
+            # bool в integrity_score
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                integrity_score=True  # type: ignore
+            ),
+            # Inf в tensor_divergence
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                tensor_divergence=float("inf")
+            ),
+            # Не-термин в identified_concepts
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                identified_concepts=[{"concept_id": "c1"}]  # type: ignore
+            ),
+            # Непустой пустой concept_id в термине
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                identified_concepts=[
+                    DisambiguatedTerm(concept_id="   ", canonical_term="t", source_fragment="f")
+                ]
+            ),
+            # bool в tdi термина
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                identified_concepts=[
+                    DisambiguatedTerm(concept_id="c1", canonical_term="t", source_fragment="f", tdi=True)  # type: ignore
+                ]
+            ),
+            # NaN в tdi термина
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                identified_concepts=[
+                    DisambiguatedTerm(concept_id="c1", canonical_term="t", source_fragment="f", tdi=float("nan"))
+                ]
+            ),
+            # Не-строка в clarification_options
+            SemanticInterpretationReport(
+                status=InterpretationStatus.INTERPRETED,
+                source_language="ru",
+                primary_intent="test",
+                clarification_options=[42]  # type: ignore
+            ),
+            # Пустой clarification_options при статусе NEEDS_CLARIFICATION
+            SemanticInterpretationReport(
+                status=InterpretationStatus.NEEDS_CLARIFICATION,
+                source_language="ru",
+                primary_intent="test",
+                clarification_options=[]
+            ),
+        ]
+
+        for idx, faulty_report in enumerate(faulty_reports):
+            with self.subTest(case_index=idx):
+                spy_engine = SpyEngine()
+                config = GatewayConfig(
+                    mode=GatewayProcessingMode.AAM_RUNTIME,
+                    runtime_adapter=lambda raw, **kw: faulty_report
+                )
+                gateway = AAMPatternGateway(pattern_engine=spy_engine, config=config)
+
+                res = gateway.process_query("test query", execute_search=True)
+
+                self.assertEqual(res.status, InterpretationStatus.AAM_ERROR)
+                self.assertIsNone(res.search_result)
+                self.assertIsNone(res.parsed_query)
+                self.assertEqual(spy_engine.search_call_count, 0)
+                self.assertIsNotNone(res.error_message)
+                self.assertIsNotNone(res.interpretation_report)
+                self.assertEqual(res.interpretation_report.status, InterpretationStatus.AAM_ERROR)
 
 
 if __name__ == "__main__":
