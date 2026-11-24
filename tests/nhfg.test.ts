@@ -148,7 +148,7 @@ function runNhfgTests() {
 
   // SUITE 6: Backward Compatibility with Atlas Core
   console.log('\n--- 6. Backward Compatibility with Atlas Core ---');
-  assert(ALL_CANONICAL_ENTITIES.length === 53, `Canonical entity count remains exactly 53 (found ${ALL_CANONICAL_ENTITIES.length})`);
+  assert(ALL_CANONICAL_ENTITIES.length === 55, `Canonical entity count is 55 (53 baseline + 2 geometry patterns, found ${ALL_CANONICAL_ENTITIES.length})`);
 
   console.log('================================================================');
   console.log(`TOTAL NHFG TESTS: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);

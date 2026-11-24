@@ -9,6 +9,7 @@
 ## Category 1: Architecture
 * [ARCHITECTURE.md](ARCHITECTURE.md) — Core system architecture and layered design (`SOURCE-CONFIRMED`)
 * [PATTERN_DRA.md](PATTERN_DRA.md) — Deterministic Reasoning Anchor (DRA) 7-stage agent reasoning specification (`SOURCE-CONFIRMED`)
+* [GEOMETRY_PATTERN_EXTRACTION.md](GEOMETRY_PATTERN_EXTRACTION.md) — Geometry Pattern Extraction principles for 2D/3D stand interfaces (`PRELIMINARY`: `SPECIFIED` + `PROPOSED` hypothesis)
 * [CROSS_REPOSITORY_AUDIT.md](CROSS_REPOSITORY_AUDIT.md) — Cross-repository audit findings and stability reports (`SOURCE-CONFIRMED`)
 * [ROADMAP.md](ROADMAP.md) — Long-term project roadmap and publication milestones (`PRELIMINARY`)
 * [TESTING.md](TESTING.md) — Testing philosophy and execution guidelines (`SOURCE-CONFIRMED`)

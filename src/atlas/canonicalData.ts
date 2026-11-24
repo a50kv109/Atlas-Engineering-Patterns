@@ -1184,6 +1184,150 @@ export const CANONICAL_PATTERNS: PatternEntity[] = [
       { sourceId: 'pat-deterministic-reasoning-anchor', relation: 'COMPOSES_WITH', targetId: 'pat-epistemic-status-labeling', rationale: 'Complements explicit fact, interpretation, and hypothesis labeling.' }
     ]
   },
+  {
+    id: 'pat-parametric-geometry-identification',
+    type: 'pattern',
+    title: 'Parametric Geometry Identification (Inverse Model Alignment)',
+    shortDescription: 'Identifies unknown 2D/3D stand drawings I via controllable model M(p), geometric features, and error minimization min_p E(I, M(p)).',
+    fullDescription: 'Replaces passive coordinate-by-coordinate measurement on 2D/3D geometric, kinematic, or architectural inspection stands with an inverse model-alignment workflow: I -> M(p) -> min_p E(I, M(p)). Operators steer bounded control parameters p of a parametric model M(p) overlaid onto observed drawing I on a crosshair canvas while monitoring geometric features (length ratios, angles, incidence) and alignment discrepancy error E(I, M(p)). Strictly constrained to the geometry family representable by M(p); absolute physical scale cannot be recovered without an explicit dimensional reference standard.',
+    lifecycleStatus: 'SPECIFIED',
+    domainCategory: 'telemetry',
+    tags: ['geometry', 'parametric', 'identification', 'model-matching', 'invariants', 'error-function', '2d', '3d', 'stand', 'interface'],
+    problemStatement: 'Direct pixel or coordinate measurement on unknown 2D/3D geometric stand drawings fails when physical scale is unknown, features are partially occluded, or structural relationships matter more than absolute dimensions.',
+    solutionSummary: 'Expose a controllable parametric model M(p) overlaid onto observed frame I with bounded parameter scrubbers, geometric feature alignment, residual discrepancy E(I, M(p)) feedback, and explicit INFERRED epistemic tagging.',
+    tradeOffs: {
+      advantages: [
+        'Identifies dimensionless length ratios, angles, and topological geometric features independently of image scale',
+        'Recovers unmeasured control parameters p when full dimensions are not known upfront',
+        'Provides auditable alignment error function E(I, M(p)) and residual discrepancy rather than opaque black-box guesses'
+      ],
+      disadvantages: [
+        'Identifies parameters strictly within the geometry family representable by the declared model M(p)',
+        'Cannot recover absolute physical scale (mm, m) from image I without an explicit dimensional reference standard',
+        'Susceptible to local alignment minima if parameter bounds are left unconstrained'
+      ]
+    },
+    applicability: {
+      purposes: ['RESEARCH_BENCH', 'STUDENT_LAB_EXPERIMENT', 'EDUCATIONAL_DEMO'],
+      targetLevels: ['UNDERGRADUATE', 'RESEARCHER'],
+      minScreens: 1,
+      requiredPeripherals: ['Mouse or Stylus'],
+      hardConstraints: [
+        'Parametric model family M(p) and parameter bounds must be declared prior to matching; out-of-family geometries cannot be identified',
+        'Absolute physical scale cannot be recovered without an explicit dimensional reference standard',
+        'Fitted parameters p must be labeled as INFERRED estimates rather than direct physical measurements'
+      ]
+    },
+    primitiveIds: ['prim-crosshair-canvas', 'prim-stepper-scrubber', 'prim-state-annunciator-matrix'],
+    authorOrSource: 'Atlas Geometry Pattern Extraction (PATTERN-01)',
+    createdAt: '2026-11-23',
+    updatedAt: '2026-11-23',
+    evidenceIds: [],
+    contract: {
+      inputPorts: [
+        { id: 'observed_geometry', type: 'ObservedGeometryFrame', description: 'Observed 2D/3D drawing or optical stand frame I', required: true },
+        { id: 'parametric_model_family', type: 'ParametricModelSpec', description: 'Controlled mathematical model M(p) defining the representable geometry family', required: true },
+        { id: 'parameter_bounds', type: 'ParameterBoundsMap', description: 'Permissible variation ranges for free control parameters p', required: false },
+        { id: 'dimensional_reference', type: 'DimensionalReferenceStandard', description: 'Optional physical scale datum required to resolve absolute units', required: false }
+      ],
+      outputPorts: [
+        { id: 'fitted_parameters', type: 'QualifiedParameterEstimate[]', description: 'Estimated control parameter values p tagged with INFERRED epistemic status' },
+        { id: 'alignment_residual', type: 'DiscrepancyMetric', description: 'Evaluated alignment error function E(I, M(p)) and residual discrepancy' },
+        { id: 'epistemic_fit_status', type: 'EpistemicFitStatus', description: 'Convergence, scale-datum availability, and ambiguity indicator (INFERRED | CONVERGED | AMBIGUOUS | UNVERIFIED)' }
+      ],
+      guarantees: [
+        'Raw observed drawing coordinates remain unmutated during parameter search',
+        'Every fitted parameter carries an explicit residual discrepancy E(I, M(p)) and epistemic qualification',
+        'Reports scale as dimensionless/relative unless a dimensional reference standard is provided'
+      ],
+      constraints: [
+        'Identifies geometries only within the declared parametric model family M(p)',
+        'Absolute scale recovery is forbidden without an explicit dimensional reference standard',
+        'Cannot claim direct empirical measurement status for inferred parameters without independent verification'
+      ],
+      version: '0.1.0'
+    },
+    relations: [
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'USES', targetId: 'prim-crosshair-canvas' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'USES', targetId: 'prim-stepper-scrubber' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'USES', targetId: 'prim-state-annunciator-matrix' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'COMPOSES_WITH', targetId: 'pat-scale-invariant-geometric-analytics', rationale: 'Combines inverse parametric identification with scale-separable spectral fingerprint comparison.' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'COMPOSES_WITH', targetId: 'pat-epistemic-status-labeling', rationale: 'Separates observed raw geometry from model-inferred parameters.' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'COMPOSES_WITH', targetId: 'pat-reference-experiment-dual-workspace', rationale: 'Supports side-by-side comparison of observed drawing and parametric model.' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'COMPOSES_WITH', targetId: 'pat-preview-validate-commit', rationale: 'Guards parameter mutations against degenerate geometric topologies.' },
+      { sourceId: 'pat-parametric-geometry-identification', relation: 'COMPOSES_WITH', targetId: 'pat-deterministic-reasoning-anchor', rationale: 'Projects geometric identification fragments into deterministic residual verification.' }
+    ]
+  },
+  {
+    id: 'pat-scale-invariant-geometric-analytics',
+    type: 'pattern',
+    title: 'Scale-Separable Analytical Representation (Scale-Invariant Geometric Analytics)',
+    shortDescription: 'Separates base reference B, variable perturbations p, physical units, dimensionless normalization, and display axis scale S under F = R(B, p; S).',
+    fullDescription: 'Implements scale-separable analytical representation F = R(B, p; S) for geometric and spectral stands, strictly distinguishing six concerns: (1) immutable base reference configuration B (Level A), (2) variable additional constructions/perturbations p (Level B), (3) dimensionless normalization (u = x/L, area/L^2, volume/L^3), (4) raw physical units, (5) analytical data transformation, and (6) display axis range/ruler scaling S (F_k(u) = F(ku), analogous to musical meters). Supports Absolute, Relative, Normalized, Scaled, and Comparative views without mutating raw data or conflating normalization with axis zooming.',
+    lifecycleStatus: 'PROPOSED',
+    domainCategory: 'telemetry',
+    tags: ['geometry', 'scale-separable', 'scale-invariant', 'normalization', 'spectrum', 'multi-scale', 'comparative', 'analytics', 'stand', 'interface'],
+    problemStatement: 'Locking analytical stand plots to a single fixed axis scale prevents operators from distinguishing scale-dependent coordinate magnitudes from intrinsic geometric laws, and conflating axis range scaling with data normalization corrupts interpretation.',
+    solutionSummary: 'Implement F = R(B, p; S) to decouple Level A base reference B, Level B variable perturbations p, physical units, dimensionless normalization by L, and Level C display ruler/axis scaling S across Absolute, Relative, Normalized, Scaled, and Comparative modes.',
+    tradeOffs: {
+      advantages: [
+        'Strictly isolates analytical data transformation and normalization from display axis range scaling',
+        'Enables cross-scale comparison of geometrically similar 2D/3D constructions in a shared dimensionless coordinate frame',
+        'Preserves auditability by storing raw values, physical units, normalization basis L, and display ruler S independently'
+      ],
+      disadvantages: [
+        'Hypothesis awaiting formal invariance vs. discriminability benchmarking across similar and distinct shape families',
+        'Operators can misread scaled slopes or dimensionless values if active mode and basis L are not persistently badged'
+      ]
+    },
+    applicability: {
+      purposes: ['RESEARCH_BENCH', 'STUDENT_LAB_EXPERIMENT'],
+      targetLevels: ['UNDERGRADUATE', 'RESEARCHER'],
+      minScreens: 1,
+      requiredPeripherals: [],
+      hardConstraints: [
+        'Raw measurements, physical units, normalization basis L, and display axis scale S must be stored and tagged separately',
+        'Data normalization and display axis range scaling must never be conflated',
+        'Undefined, non-finite, or non-positive normalization basis L must block Normalized mode with an explicit UNDEFINED_BASIS warning; missing samples must never be coerced to 0.0'
+      ]
+    },
+    primitiveIds: ['prim-time-series-strip', 'prim-crosshair-canvas', 'prim-state-annunciator-matrix'],
+    authorOrSource: 'Atlas Geometry Pattern Extraction (PATTERN-02 — Scale-Separable Analytical Representation Hypothesis)',
+    createdAt: '2026-11-23',
+    updatedAt: '2026-11-23',
+    evidenceIds: [],
+    contract: {
+      inputPorts: [
+        { id: 'raw_geometric_spectrum', type: 'RawSpectrumSeries', description: 'Unmodified measurements paired with physical engineering units (preserving null/missing markers)', required: true },
+        { id: 'reference_configuration', type: 'ReferenceDatumSpec', description: 'Level A base reference geometry B and characteristic scale L > 0', required: true },
+        { id: 'presentation_mode_config', type: 'ScalePresentationConfig', description: 'Active mode (Absolute | Relative | Normalized | Scaled | Comparative) and display ruler factor k (S)', required: true }
+      ],
+      outputPorts: [
+        { id: 'rendered_spectrum_view', type: 'QualifiedSpectrumView', description: 'Analytical plot series transformed according to active Level C mode without mutating raw data' },
+        { id: 'normalized_invariants', type: 'DimensionlessInvariant[]', description: 'Scale-normalized quantities (u = x/L, A/L^2, V/L^3)' },
+        { id: 'active_scale_metadata', type: 'ScaleBasisDescriptor', description: 'Explicit badge metadata disclosing active mode, ruler factor k (S), physical units, and basis L' }
+      ],
+      guarantees: [
+        'Changing display axis range or ruler scale S never mutates rawValues, physicalUnits, or Level A base configuration B',
+        'Normalized outputs never masquerade under raw physical unit labels',
+        'Invalid or non-positive basis L blocks normalization instead of dividing by zero or falling back silently; missing data samples emit NO_DATA instead of 0.0'
+      ],
+      constraints: [
+        'Requires invariance and discriminability verification before promotion beyond PROPOSED hypothesis status'
+      ],
+      version: '0.1.0'
+    },
+    relations: [
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'USES', targetId: 'prim-time-series-strip' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'USES', targetId: 'prim-crosshair-canvas' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'USES', targetId: 'prim-state-annunciator-matrix' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'COMPOSES_WITH', targetId: 'pat-parametric-geometry-identification', rationale: 'Provides normalized spectral fingerprints for scale-agnostic parametric identification.' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'COMPOSES_WITH', targetId: 'pat-decoupled-view-transform', rationale: 'Extends view-vs-model isolation from camera orientation to analytical scale and normalization.' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'COMPOSES_WITH', targetId: 'pat-dual-state-representation', rationale: 'Keeps raw values, units, and presentation settings separated in the portable passport.' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'COMPOSES_WITH', targetId: 'pat-epistemic-status-labeling', rationale: 'Tags normalized/scaled outputs distinctly from raw physical measurements and forbids null->0.0 coercion.' },
+      { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'COMPOSES_WITH', targetId: 'pat-reference-experiment-dual-workspace', rationale: 'Uses locked Level A baseline workspace against variable Level B experimental perturbations.' }
+    ]
+  },
 ];
 
 export const CANONICAL_CONFIGURATIONS: ConfigurationEntity[] = [

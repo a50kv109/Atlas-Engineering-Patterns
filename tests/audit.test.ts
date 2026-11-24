@@ -55,6 +55,18 @@ function runTests() {
   const draPattern = ALL_CANONICAL_ENTITIES.find(e => e.id === 'pat-deterministic-reasoning-anchor');
   assert(draPattern !== undefined && draPattern.type === 'pattern', 'Deterministic Reasoning Anchor pattern is present in canonical records');
 
+  const paramGeoPattern = ALL_CANONICAL_ENTITIES.find(e => e.id === 'pat-parametric-geometry-identification');
+  const scaleInvPattern = ALL_CANONICAL_ENTITIES.find(e => e.id === 'pat-scale-invariant-geometric-analytics');
+  assert(
+    paramGeoPattern !== undefined &&
+    paramGeoPattern.type === 'pattern' &&
+    paramGeoPattern.lifecycleStatus === 'SPECIFIED' &&
+    scaleInvPattern !== undefined &&
+    scaleInvPattern.type === 'pattern' &&
+    scaleInvPattern.lifecycleStatus === 'PROPOSED',
+    'Extracted Geometry Stand patterns (SPECIFIED + PROPOSED hypothesis) are present with accurate epistemic lifecycle'
+  );
+
   // TEST SUITE 2: Knowledge Graph Construction & Semantic Validation
   console.log('\n--- 2. Knowledge Graph & Relationship Rules ---');
   const graph = new KnowledgeGraph(ALL_CANONICAL_ENTITIES);
@@ -136,6 +148,26 @@ function runTests() {
     conflictRes.matchedPatterns.some(p => p.pattern.id === 'pat-guided-student-experiment-stepper') &&
     conflictRes.matchedPatterns.some(p => p.pattern.id === 'pat-dual-operator-safety-interlock');
   assert(!hasBothConflicting, 'Conflict prevention: incompatible patterns suppressed from co-selection');
+
+  // Geometry Stand Retrieval & Epistemic Boundary Check
+  const geoStandRes = retrieval.composeSolution({
+    standName: '2D/3D Geometric Inspection Stand',
+    purpose: 'RESEARCH_BENCH',
+    userLevel: 'RESEARCHER',
+    requiredCapabilities: ['parametric', 'scale-invariant'],
+    screensCount: 1,
+    peripherals: ['Mouse'],
+    hardConstraints: [],
+    accessibilityNeeds: [],
+    optionalPreferences: []
+  });
+  assert(
+    geoStandRes.matchedPatterns.some(p => p.pattern.id === 'pat-parametric-geometry-identification') &&
+    geoStandRes.matchedPatterns.some(p => p.pattern.id === 'pat-scale-invariant-geometric-analytics') &&
+    geoStandRes.validationStatus === 'UNVERIFIED' &&
+    Boolean(geoStandRes.lossLog?.some(l => l.type === 'HEURISTIC_MATCH_ONLY')),
+    'Geometry stand retrieval matches both extracted patterns while keeping validationStatus UNVERIFIED (HEURISTIC_MATCH_ONLY)'
+  );
 
   // TEST SUITE 4: Ingestion Pipeline Gatekeeping
   console.log('\n--- 4. Ingestion Pipeline & Scope Gatekeeping ---');
