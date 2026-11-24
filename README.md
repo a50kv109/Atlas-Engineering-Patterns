@@ -4,7 +4,7 @@
 **Domain**: Interface Configuration for Educational, Research, and Laboratory Stands
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Tests](https://img.shields.io/badge/tests-71%20passed%20%2F%200%20failed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-97%20passed%20%2F%200%20failed-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-blue.svg)]()
 [![Ontology](https://img.shields.io/badge/Ontology-5%20Classes%20%C2%B7%208%20Relations-cyan.svg)]()
 [![NHFG](https://img.shields.io/badge/NHFG-Retrieval%20Integrated-purple.svg)]()
@@ -78,7 +78,7 @@ See [docs/ONTOLOGY.md](docs/ONTOLOGY.md) for full relationship rules and semanti
 ## 5. Architectural Overview
 
 The system operates across three decoupled layers:
-1. **Canonical Knowledge Storage**: 53 verified records typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
+1. **Canonical Knowledge Storage**: 55 canonical records (53 baseline records + 2 extracted geometry patterns in `SPECIFIED`/`PROPOSED` status) typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
 2. **Knowledge Graph Engine (`src/atlas/graphEngine.ts`)**: Dynamically extracts typed directional relationships (`USES`, `COMPOSES_WITH`, `REQUIRES`, `ALTERNATIVE_TO`, `SPECIALIZES`, `CONFLICTS_WITH`, `IMPLEMENTED_IN`, `VERIFIED_BY`) and validates structural integrity.
 3. **Retrieval & Composition Engine (`src/atlas/retrievalEngine.ts`)**: Deterministically evaluates stand requirements against user levels, screen counts, and physical peripherals; enforces hard constraints; detects mutual conflicts; distinguishes heuristic matches (`HEURISTIC_MATCH_ONLY`) from verified coverage; and reports honest **Knowledge Gaps** when requirements exceed canonical knowledge.
 
@@ -89,7 +89,7 @@ For deep architectural documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTU
 ## 6. Available Application Functions
 
 The included laboratory workbench UI provides:
-- **Registry Browser**: Filter, search, and inspect the 53 canonical records with complete schema details and trade-offs.
+- **Registry Browser**: Filter, search, and inspect the 55 canonical records with complete schema details and trade-offs.
 - **Interactive Knowledge Graph Visualizer**: Pan, zoom, inspect nodes, and highlight incoming/outgoing relational edges on an interactive SVG canvas.
 - **Stand Solution Composer**: Select a stand scenario (Wind Tunnel, Bioreactor, High-Voltage, or Custom), evaluate constraints, inspect component selection rationales, test an interactive live layout simulation (E-stop ribbon, steppers, crosshairs, 1000Hz Canvas waveform buffer), and export a machine-readable JSON manifest.
 - **Pattern Ingestion Workbench**: Submit candidate ideas through automated scope verification, Jaccard token duplicate detection, stable ID generation, and schema validation.
@@ -103,12 +103,12 @@ The included laboratory workbench UI provides:
 | Capability | Real Current Status |
 | :--- | :--- |
 | **Data Models & Types** | **Implemented & Inspected** in `src/atlas/types.ts`. |
-| **Canonical Records** | **Implemented & Tested**: 53 verified records with stable IDs (`src/atlas/canonicalData.ts`). |
+| **Canonical Records** | **Implemented & Tested**: 55 canonical records with stable IDs in `src/atlas/canonicalData.ts` (53 baseline records + 2 geometry stand patterns in `SPECIFIED`/`PROPOSED` status with `evidenceIds: []`). |
 | **Knowledge Graph** | **Implemented & Tested**: In-memory builder, 0 dangling edges, validated semantics. |
 | **Retrieval Engine & SOL-2** | **Implemented & Tested**: Heuristic vs verified separation (`HEURISTIC_MATCH_ONLY`), loss log, gap reporting. |
 | **Deterministic Reasoning Anchor (DRA)** | **Implemented & Documented**: 7-stage agent reasoning anchor (`docs/PATTERN_DRA.md`). |
 | **Normative Guidance (NHFG Layer)** | **Implemented & Integrated (Stage D)**: 3 ISO sources, 7 ISO 9241-110 principles, integrated with `RetrievalEngine`, traceable mappings, non-linear status model (`docs/NHFG_RETRIEVAL_INTEGRATION.md`). |
-| **Automated Test Suites** | **Implemented & Tested**: 71 automated assertions pass (17 audit + 8 epistemic loss + 29 NHFG pilot + 17 retrieval integration tests). |
+| **Automated Test Suites** | **Implemented & Tested**: 97 executed TypeScript assertions pass via `npm test` (19 audit + 8 epistemic loss + 29 NHFG pilot + 17 retrieval integration + 24 geometry pattern assertions across 19 static `assert` call sites, including a 6-case scale-basis loop); plus 34/34 Python Pattern Lens + AAM Gateway v0 unit tests. |
 | **Physical Safety** | **Not Claimed**: UI components integrate with hardware loops; software does not substitute for hardware functional safety. |
 
 ---
@@ -142,7 +142,7 @@ npm run lint
 
 ### Automated Test Suite Execution
 ```bash
-# Runs the 16 automated tests covering graph validation, retrieval, and audit checks
+# Runs all 5 TypeScript test suites (97 executed assertions across audit, epistemic loss, NHFG, retrieval integration, and geometry patterns)
 npm test
 ```
 
@@ -159,16 +159,16 @@ In addition to the Atlas Core React/TypeScript application, the repository inclu
 
 1. **Pattern Lens v0.1**:
    - An autonomous search, constraint verification, and evidence audit engine implemented in pure Python 3.10+ (zero external dependencies).
-   - Fully verified with 20/20 unit tests (`tests_pattern_lens/`).
+   - Verified with 34/34 total unit tests in `tests_pattern_lens/` (20 core Pattern Lens tests + 14 AAM Gateway v0 integration tests).
    - Operates independently to evaluate requirements, inventory completeness (`UNKNOWN` vs `VIOLATED`), evidence versioning, and deterministic lexicographical ranking.
 2. **AAM-Language-Kernels v2**:
    - A multi-lingual semantic normalization architecture (AXIS-10, Engineering Semantic Compiler protocol, Integrity Score, and Tensor Divergence Index).
    - Provides glossaries and translation governance across 10 natural languages.
-3. **Planned Integration Gateway (`aam_gateway.py`)**:
-   - Currently in **Specification Stage** (`docs/LANGUAGE_KERNEL_INTEGRATION_AUDIT.md`).
+3. **AAM Integration Gateway (`pattern_lens/aam_gateway.py`)**:
+   - Implemented as v0 (`PASSTHROUGH` baseline and runtime adapter contract per `docs/LANGUAGE_KERNEL_INTEGRATION_AUDIT.md`).
    - Designed as an isolated adapter to pass normalized semantic intent from AAM language kernels into Pattern Lens without coupling or altering its core mechanics.
    - Enforces strict safety invariants: high linguistic Integrity Score cannot elevate authorization or override failed constraints/evidence.
-   - Includes planned fallback handling (`PASSTHROUGH`), ambiguity detection (`NEEDS_CLARIFICATION`), and a 12-test integration safety suite.
+   - Includes `PASSTHROUGH` handling, ambiguity detection (`NEEDS_CLARIFICATION`), and 14 integration safety tests (`tests_pattern_lens/test_aam_integration.py`).
 
 For complete documentation indexes, see [docs/README.md](docs/README.md) and [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md).
 

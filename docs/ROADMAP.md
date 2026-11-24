@@ -12,7 +12,7 @@ Stages are updated based on demonstrable codebase evidence. A stage is never mar
 - **Status**: `READY FOR INITIAL PUBLICATION`
 - **Objective**: Establish transparent repository organization, clean documentation, reproducible build and test commands (`npm test`, `npm run build`, `npm run lint`), and elimination of unsupported claims.
 - **Evidence**:
-  - `npm test` runs 16 automated tests across canonical data, graph engine, retrieval, ingestion, and internal audit runner with 0 failures.
+  - `npm test` runs 5 TypeScript suites (97 executed assertions across canonical data, graph engine, retrieval, ingestion, NHFG, geometry patterns, and internal audit runner) with 0 failures.
   - `npm run build` generates the production Vite SPA bundle with zero build errors.
   - Zero proprietary secrets or hardcoded environment keys in repository.
 - **Remaining Task**: Repository owner pushes to GitHub via Google AI Studio integration and selects an open-source or institutional license.
@@ -68,7 +68,7 @@ Stages are updated based on demonstrable codebase evidence. A stage is never mar
 
 ### Stage 6: Expansion of the Canonical Pattern Library
 - **Status**: `PLANNED`
-- **Objective**: Expand beyond the initial 23 seed records to cover additional specialized laboratory domains:
+- **Objective**: Expand beyond the current 55 canonical records to cover additional specialized laboratory domains:
   - Cryogenic vacuum test stands.
   - Particle accelerator radio-frequency cavities.
   - Mobile robotic teleoperation consoles.

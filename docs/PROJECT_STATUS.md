@@ -9,15 +9,15 @@
 ## 1. Existing Baseline (Implemented & Tested)
 
 ### A. Atlas Core & Retrieval Engine (`src/atlas/`)
-* **Status:** `TESTED` (71 automated tests passing successfully).
+* **Status:** `TESTED` (97 executed TypeScript assertions passing via `npm test`: 19 audit + 8 epistemic loss + 29 NHFG + 17 retrieval integration + 24 geometry pattern assertions).
 * **Components:**
-  * 53 canonical records (`src/atlas/canonicalData.ts`) with unique IDs and 5 entity classes (Primitives, Patterns, Configurations, Implementations, Evidence).
+  * 55 canonical records (`src/atlas/canonicalData.ts`: 53 baseline records + 2 geometry patterns in `SPECIFIED`/`PROPOSED` status) with unique IDs and 5 entity classes (Primitives, Patterns, Configurations, Implementations, Evidence).
   * Knowledge graph engine (`src/atlas/graphEngine.ts`) with zero dangling edges and validated edge constraints.
   * Retrieval and Composition engine (`src/atlas/retrievalEngine.ts`) enforcing hard constraints, conflict suppression, epistemic provenance labeling (`HEURISTIC_MATCH_ONLY`), and explicit Knowledge Gap accounting.
   * Normative and Human Factors Guidance (NHFG) integration layer (ISO 9241-110, anti-conflation safeguards).
 
 ### B. Pattern Lens Core Engine (`pattern_lens/`)
-* **Status:** `TESTED` (20/20 unit tests passing successfully in `tests_pattern_lens/`).
+* **Status:** `TESTED` (34/34 unit tests passing successfully in `tests_pattern_lens/`: 20 core + 14 AAM Gateway v0 integration tests).
 * **Components:**
   * Pure Python 3.10+ implementation (zero external dependencies).
   * Strict predicate evaluation (`constraints.py`), separating incomplete inventory (`UNKNOWN`) from confirmed violations (`VIOLATED`).

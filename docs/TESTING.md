@@ -19,17 +19,30 @@ npm run build
 
 ## 2. Test Architecture and Suites
 
-Automated tests are housed in `tests/audit.test.ts` and `tests/epistemicLoss.test.ts` and executed via `npm test` (`tsx tests/audit.test.ts && tsx tests/epistemicLoss.test.ts`):
+Automated TypeScript tests in `npm test` execute five suites sequentially (`tsx tests/audit.test.ts && tsx tests/epistemicLoss.test.ts && tsx tests/nhfg.test.ts && tsx tests/nhfgRetrieval.test.ts && tsx tests/geometryPatterns.test.ts`), totaling **97 executed assertions** (`0` failures):
+
+| Script / Suite | File | Executed Assertions | Static `assert(` Call Sites |
+| :--- | :--- | :---: | :---: |
+| `npm run test:audit` | `tests/audit.test.ts` | 19 | 19 |
+| `npm run test:epistemic` | `tests/epistemicLoss.test.ts` | 8 | 8 |
+| `npm run test:nhfg` | `tests/nhfg.test.ts` | 29 | 25 *(1 loop × 5)* |
+| `npm run test:retrieval` | `tests/nhfgRetrieval.test.ts` | 17 | 17 |
+| `npm run test:geometry` | `tests/geometryPatterns.test.ts` | 24 | 19 *(1 loop × 6)* |
+
+Python Pattern Lens & AAM Gateway v0 tests run separately via `PYTHONPATH=. python3 -m unittest discover -s tests_pattern_lens -v` (**34 / 34** passing).
+
+Sample output from `audit` and `epistemicLoss` suites:
 
 ```
 ================================================================
 ATLAS ENGINEERING PATTERNS — TEST SUITE EXECUTION
 ================================================================
 --- 1. Canonical Dataset Structure & Stability ---
-[PASS] Canonical entity count (53) meets baseline threshold
+[PASS] Canonical entity count (55) meets baseline threshold
 [PASS] All canonical entity IDs are strictly unique
 [PASS] All 5 canonical entity types are populated
 [PASS] Deterministic Reasoning Anchor pattern is present in canonical records
+[PASS] Extracted Geometry Stand patterns (SPECIFIED + PROPOSED hypothesis) are present with accurate epistemic lifecycle
 
 --- 2. Knowledge Graph & Relationship Rules ---
 [PASS] Zero dangling edges in knowledge graph
@@ -43,6 +56,8 @@ ATLAS ENGINEERING PATTERNS — TEST SUITE EXECUTION
 [PASS] Anti-hallucination check: missing capability correctly flagged as explicit Knowledge Gap
 [PASS] Conflict prevention: incompatible patterns suppressed from co-selection
 
+[PASS] Geometry stand retrieval matches both extracted patterns while keeping validationStatus UNVERIFIED (HEURISTIC_MATCH_ONLY)
+
 --- 4. Ingestion Pipeline & Scope Gatekeeping ---
 [PASS] Ingestion gatekeeper: rejects out-of-scope non-stand proposal
 [PASS] Ingestion gatekeeper: flags duplicate/synonym proposal
@@ -52,7 +67,7 @@ ATLAS ENGINEERING PATTERNS — TEST SUITE EXECUTION
 [PASS] Acceptance Audit formal verdict is ACCEPTED (12/12 criteria passed)
 [PASS] Acceptance Audit reports zero critical findings
 ================================================================
-TOTAL AUDIT TESTS: 17 | PASSED: 17 | FAILED: 0
+TOTAL TESTS: 19 | PASSED: 19 | FAILED: 0
 ================================================================
 
 ================================================================
