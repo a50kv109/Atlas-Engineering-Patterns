@@ -4,7 +4,7 @@
 **Domain**: Interface Configuration for Educational, Research, and Laboratory Stands
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Tests](https://img.shields.io/badge/tests-97%20passed%20%2F%200%20failed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-114%20passed%20%2F%200%20failed-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-blue.svg)]()
 [![Ontology](https://img.shields.io/badge/Ontology-5%20Classes%20%C2%B7%208%20Relations-cyan.svg)]()
 [![NHFG](https://img.shields.io/badge/NHFG-Retrieval%20Integrated-purple.svg)]()
@@ -78,18 +78,18 @@ See [docs/ONTOLOGY.md](docs/ONTOLOGY.md) for full relationship rules and semanti
 ## 5. Architectural Overview
 
 The system operates across three decoupled layers:
-1. **Canonical Knowledge Storage**: 55 canonical records (53 baseline records + 2 extracted geometry patterns in `SPECIFIED`/`PROPOSED` status) typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
+1. **Canonical Knowledge Storage**: 56 canonical records (53 baseline records + 2 geometry stand patterns in `SPECIFIED`/`PROPOSED` status + `pat-visual-analytical-discovery` in `PROPOSED` status) typed in `src/atlas/types.ts` and housed in `src/atlas/canonicalData.ts`.
 2. **Knowledge Graph Engine (`src/atlas/graphEngine.ts`)**: Dynamically extracts typed directional relationships (`USES`, `COMPOSES_WITH`, `REQUIRES`, `ALTERNATIVE_TO`, `SPECIALIZES`, `CONFLICTS_WITH`, `IMPLEMENTED_IN`, `VERIFIED_BY`) and validates structural integrity.
 3. **Retrieval & Composition Engine (`src/atlas/retrievalEngine.ts`)**: Deterministically evaluates stand requirements against user levels, screen counts, and physical peripherals; enforces hard constraints; detects mutual conflicts; distinguishes heuristic matches (`HEURISTIC_MATCH_ONLY`) from verified coverage; and reports honest **Knowledge Gaps** when requirements exceed canonical knowledge.
 
-For deep architectural documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/PATTERN_DRA.md](docs/PATTERN_DRA.md) (Deterministic Reasoning Anchor).
+For deep architectural documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PATTERN_DRA.md](docs/PATTERN_DRA.md) (Deterministic Reasoning Anchor), and [docs/PATTERN_VADP.md](docs/PATTERN_VADP.md) (Visual Analytical Discovery Pattern).
 
 ---
 
 ## 6. Available Application Functions
 
 The included laboratory workbench UI provides:
-- **Registry Browser**: Filter, search, and inspect the 55 canonical records with complete schema details and trade-offs.
+- **Registry Browser**: Filter, search, and inspect the 56 canonical records with complete schema details and trade-offs.
 - **Interactive Knowledge Graph Visualizer**: Pan, zoom, inspect nodes, and highlight incoming/outgoing relational edges on an interactive SVG canvas.
 - **Stand Solution Composer**: Select a stand scenario (Wind Tunnel, Bioreactor, High-Voltage, or Custom), evaluate constraints, inspect component selection rationales, test an interactive live layout simulation (E-stop ribbon, steppers, crosshairs, 1000Hz Canvas waveform buffer), and export a machine-readable JSON manifest.
 - **Pattern Ingestion Workbench**: Submit candidate ideas through automated scope verification, Jaccard token duplicate detection, stable ID generation, and schema validation.
@@ -103,12 +103,13 @@ The included laboratory workbench UI provides:
 | Capability | Real Current Status |
 | :--- | :--- |
 | **Data Models & Types** | **Implemented & Inspected** in `src/atlas/types.ts`. |
-| **Canonical Records** | **Implemented & Tested**: 55 canonical records with stable IDs in `src/atlas/canonicalData.ts` (53 baseline records + 2 geometry stand patterns in `SPECIFIED`/`PROPOSED` status with `evidenceIds: []`). |
+| **Canonical Records** | **Implemented & Tested**: 56 canonical records with stable IDs in `src/atlas/canonicalData.ts` (53 baseline records + 2 geometry stand patterns + `pat-visual-analytical-discovery` in `SPECIFIED`/`PROPOSED` status with `evidenceIds: []`). |
 | **Knowledge Graph** | **Implemented & Tested**: In-memory builder, 0 dangling edges, validated semantics. |
 | **Retrieval Engine & SOL-2** | **Implemented & Tested**: Heuristic vs verified separation (`HEURISTIC_MATCH_ONLY`), loss log, gap reporting. |
 | **Deterministic Reasoning Anchor (DRA)** | **Implemented & Documented**: 7-stage agent reasoning anchor (`docs/PATTERN_DRA.md`). |
+| **Visual Analytical Discovery Pattern (VADP)** | **Proposed & Documented**: 7-stage visual hypothesis & formal verification workflow (`pat-visual-analytical-discovery`, `PROPOSED`, `evidenceIds: []`; see `docs/PATTERN_VADP.md`). |
 | **Normative Guidance (NHFG Layer)** | **Implemented & Integrated (Stage D)**: 3 ISO sources, 7 ISO 9241-110 principles, integrated with `RetrievalEngine`, traceable mappings, non-linear status model (`docs/NHFG_RETRIEVAL_INTEGRATION.md`). |
-| **Automated Test Suites** | **Implemented & Tested**: 97 executed TypeScript assertions pass via `npm test` (19 audit + 8 epistemic loss + 29 NHFG pilot + 17 retrieval integration + 24 geometry pattern assertions across 19 static `assert` call sites, including a 6-case scale-basis loop); plus 34/34 Python Pattern Lens + AAM Gateway v0 unit tests. |
+| **Automated Test Suites** | **Implemented & Tested**: 114 executed TypeScript assertions pass via `npm test` (19 audit + 8 epistemic loss + 29 NHFG pilot + 17 retrieval integration + 24 geometry patterns + 17 VADP assertions); plus 34/34 Python Pattern Lens + AAM Gateway v0 unit tests. |
 | **Physical Safety** | **Not Claimed**: UI components integrate with hardware loops; software does not substitute for hardware functional safety. |
 
 ---
@@ -142,7 +143,7 @@ npm run lint
 
 ### Automated Test Suite Execution
 ```bash
-# Runs all 5 TypeScript test suites (97 executed assertions across audit, epistemic loss, NHFG, retrieval integration, and geometry patterns)
+# Runs all 6 TypeScript test suites (114 executed assertions across audit, epistemic loss, NHFG, retrieval integration, geometry patterns, and VADP)
 npm test
 ```
 

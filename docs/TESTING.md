@@ -19,7 +19,7 @@ npm run build
 
 ## 2. Test Architecture and Suites
 
-Automated TypeScript tests in `npm test` execute five suites sequentially (`tsx tests/audit.test.ts && tsx tests/epistemicLoss.test.ts && tsx tests/nhfg.test.ts && tsx tests/nhfgRetrieval.test.ts && tsx tests/geometryPatterns.test.ts`), totaling **97 executed assertions** (`0` failures):
+Automated TypeScript tests in `npm test` execute six suites sequentially (`tsx tests/audit.test.ts && tsx tests/epistemicLoss.test.ts && tsx tests/nhfg.test.ts && tsx tests/nhfgRetrieval.test.ts && tsx tests/geometryPatterns.test.ts && tsx tests/vadpPattern.test.ts`), totaling **114 executed assertions** (`0` failures):
 
 | Script / Suite | File | Executed Assertions | Static `assert(` Call Sites |
 | :--- | :--- | :---: | :---: |
@@ -28,6 +28,7 @@ Automated TypeScript tests in `npm test` execute five suites sequentially (`tsx 
 | `npm run test:nhfg` | `tests/nhfg.test.ts` | 29 | 25 *(1 loop × 5)* |
 | `npm run test:retrieval` | `tests/nhfgRetrieval.test.ts` | 17 | 17 |
 | `npm run test:geometry` | `tests/geometryPatterns.test.ts` | 24 | 19 *(1 loop × 6)* |
+| `npm run test:vadp` | `tests/vadpPattern.test.ts` | 17 | 17 |
 
 Python Pattern Lens & AAM Gateway v0 tests run separately via `PYTHONPATH=. python3 -m unittest discover -s tests_pattern_lens -v` (**34 / 34** passing).
 
@@ -38,7 +39,7 @@ Sample output from `audit` and `epistemicLoss` suites:
 ATLAS ENGINEERING PATTERNS — TEST SUITE EXECUTION
 ================================================================
 --- 1. Canonical Dataset Structure & Stability ---
-[PASS] Canonical entity count (55) meets baseline threshold
+[PASS] Canonical entity count (56) meets baseline threshold
 [PASS] All canonical entity IDs are strictly unique
 [PASS] All 5 canonical entity types are populated
 [PASS] Deterministic Reasoning Anchor pattern is present in canonical records

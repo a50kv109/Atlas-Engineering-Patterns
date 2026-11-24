@@ -98,7 +98,7 @@ Always run the automated verification suite before submitting changes:
 # Verify static types and schemas
 npm run lint
 
-# Execute all 5 TypeScript test suites (97 executed assertions)
+# Execute all 6 TypeScript test suites (114 executed assertions)
 npm test
 
 # Verify production build compilation

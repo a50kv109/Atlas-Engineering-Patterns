@@ -1328,6 +1328,78 @@ export const CANONICAL_PATTERNS: PatternEntity[] = [
       { sourceId: 'pat-scale-invariant-geometric-analytics', relation: 'COMPOSES_WITH', targetId: 'pat-reference-experiment-dual-workspace', rationale: 'Uses locked Level A baseline workspace against variable Level B experimental perturbations.' }
     ]
   },
+  {
+    id: 'pat-visual-analytical-discovery',
+    type: 'pattern',
+    title: 'Visual Analytical Discovery Pattern (VADP)',
+    shortDescription: 'Interactive parametric visualization and 7-stage hypothesis-verification workflow for discovering and validating regularities in parameterized systems.',
+    fullDescription: 'Defines a reusable research-interface and analytical workflow pattern: when direct symbolic or tabular reasoning fails to uncover structural regularities, the stand transforms the parameterized system into synchronized interactive visual representations (multi-curve plots, phase diagrams, 2D/3D surfaces, heatmaps, spectral waterfalls, or network graphs) backed by one authoritative model state. Operators and AI agents inspect candidate visual feature classes (V-01 Symmetry through V-12 Bifurcation), formulate explicit testable hypotheses, and route them to independent analytical or numerical verification while strictly preventing visual appearance from being labeled as proof.',
+    lifecycleStatus: 'PROPOSED',
+    domainCategory: 'telemetry',
+    tags: ['vadp', 'visual-analytics', 'discovery', 'parametric', 'hypothesis', 'verification', 'symmetry', 'invariance', 'multi-curve', 'guidance', 'research'],
+    problemStatement: 'Researchers and AI agents analyzing parameterized systems solely through symbolic formulas, text descriptions, or isolated numeric tables frequently reach an analytical impasse and miss structural relationships such as symmetry, complementarity, extrema, invariance, intersections, and regime transitions.',
+    solutionSummary: 'Provide an interactive visual analytical interface coupling a declared independent parameter, synchronized curve/surface views, moving cursor probes, numerical readouts, scale/normalization metadata, and a 7-stage discovery cycle (System Decomposition -> Parametric Modeling -> Visual Analytics -> Pattern Detection [V-01..V-12] -> Hypothesis Formation -> Formal Verification -> Knowledge Extraction).',
+    tradeOffs: {
+      advantages: [
+        'Surfaces candidate symmetries, conservation laws, extrema, intersections, and scaling regimes by changing system representation',
+        'Supports representation switching beyond Cartesian plots (phase spaces, 2D/3D surfaces, heatmaps, spectral plots, network graphs)',
+        'Preserves single authoritative state across model, plotted curves, and cursor readouts while gating hypotheses behind independent formal verification'
+      ],
+      disadvantages: [
+        'Apparent visual intersections, symmetries, or plateaus can be artifacts of sampling density, plotting scale, numeric precision, or interpolation',
+        'Iterative re-parameterization and synchronized multi-representation inspection add cognitive and implementation complexity over static telemetry'
+      ]
+    },
+    applicability: {
+      purposes: ['RESEARCH_BENCH', 'STUDENT_LAB_EXPERIMENT', 'EDUCATIONAL_DEMO', 'INDUSTRIAL_TESTBED'],
+      targetLevels: ['UNDERGRADUATE', 'RESEARCHER', 'CERTIFIED_OPERATOR'],
+      minScreens: 1,
+      requiredPeripherals: ['Mouse or Stylus'],
+      hardConstraints: [
+        'Candidate visual features (V-01..V-12) must be labeled OBSERVED_VISUAL_FEATURE or DESIGN_HYPOTHESIS and never auto-promoted to ANALYTICALLY_VERIFIED',
+        'Model state, plotted series, and cursor numerical readouts must share one authoritative state with disclosed domain, sampling density, and normalization basis',
+        'Formal verification must be performed independently outside the visual rendering layer before recording confirmed knowledge'
+      ]
+    },
+    primitiveIds: ['prim-crosshair-canvas', 'prim-time-series-strip', 'prim-stepper-scrubber'],
+    authorOrSource: 'Atlas Visual Analytical Discovery Pattern Specification (docs/PATTERN_VADP.md)',
+    createdAt: '2026-11-24',
+    updatedAt: '2026-11-24',
+    evidenceIds: [],
+    contract: {
+      inputPorts: [
+        { id: 'parametric_system_model', type: 'ParametricSystemSpec', description: 'Declared independent parameters, dependent functions, domain bounds, units, and constraints', required: true },
+        { id: 'representation_config', type: 'VisualRepresentationConfig', description: 'Selected representation mode (multi-curve, phase, surface, heatmap, spectral, graph) plus scale/normalization metadata', required: true },
+        { id: 'cursor_parameter_probe', type: 'ParameterProbeState', description: 'Interactive cursor position and bounded parameter adjustments', required: false }
+      ],
+      outputPorts: [
+        { id: 'synchronized_visual_view', type: 'AuthoritativeVisualState', description: 'Plotted series/surfaces synchronized with moving cursor markers and exact numeric readouts' },
+        { id: 'candidate_observations', type: 'VisualFeatureCandidate[]', description: 'Detected V-01..V-12 visual features tagged as OBSERVED_VISUAL_FEATURE or DESIGN_HYPOTHESIS' },
+        { id: 'verification_ledger', type: 'EpistemicVerificationLedger', description: 'Explicit separation of ANALYTICALLY_VERIFIED, NUMERICALLY_SUPPORTED, REJECTED, and UNKNOWN hypotheses' }
+      ],
+      guarantees: [
+        'Model state, plotted values, and cursor numerical readouts always derive from one authoritative state',
+        'Visual observations are never emitted as proven mathematical theorems without independent verification',
+        'Missing samples and undefined normalization bases are preserved explicitly as NO_DATA / UNKNOWN rather than coerced'
+      ],
+      constraints: [
+        'Does not itself execute symbolic proofs or replace external mathematical verification engines',
+        'Requires independent formal or numerical verification before promoting hypotheses beyond PROPOSED / DESIGN_HYPOTHESIS status'
+      ],
+      version: '0.1.0'
+    },
+    relations: [
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'USES', targetId: 'prim-crosshair-canvas' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'USES', targetId: 'prim-time-series-strip' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'USES', targetId: 'prim-stepper-scrubber' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'COMPOSES_WITH', targetId: 'prim-multichannel-waterfall', rationale: 'Optional composition when visual discovery requires spectral/frequency-domain waterfall views.' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'COMPOSES_WITH', targetId: 'pat-parametric-geometry-identification', rationale: 'Uses parametric models M(p) and residual curves as substrates for interactive visual discovery.' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'COMPOSES_WITH', targetId: 'pat-scale-invariant-geometric-analytics', rationale: 'Applies scale-separable normalization F = R(B, p; S) and display scale controls during multi-curve comparison.' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'COMPOSES_WITH', targetId: 'pat-high-rate-signal-inspection', rationale: 'Adjacent inspection pattern sharing synchronized waveform and cursor probes for high-rate transients.' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'COMPOSES_WITH', targetId: 'pat-epistemic-status-labeling', rationale: 'Separates OBSERVED_VISUAL_FEATURE and DESIGN_HYPOTHESIS from ANALYTICALLY_VERIFIED results.' },
+      { sourceId: 'pat-visual-analytical-discovery', relation: 'COMPOSES_WITH', targetId: 'pat-deterministic-reasoning-anchor', rationale: 'Projects candidate visual hypotheses into external deterministic verification tools.' }
+    ]
+  },
 ];
 
 export const CANONICAL_CONFIGURATIONS: ConfigurationEntity[] = [

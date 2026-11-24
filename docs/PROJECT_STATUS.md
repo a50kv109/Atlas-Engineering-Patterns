@@ -9,9 +9,9 @@
 ## 1. Existing Baseline (Implemented & Tested)
 
 ### A. Atlas Core & Retrieval Engine (`src/atlas/`)
-* **Status:** `TESTED` (97 executed TypeScript assertions passing via `npm test`: 19 audit + 8 epistemic loss + 29 NHFG + 17 retrieval integration + 24 geometry pattern assertions).
+* **Status:** `TESTED` (114 executed TypeScript assertions passing via `npm test`: 19 audit + 8 epistemic loss + 29 NHFG + 17 retrieval integration + 24 geometry patterns + 17 VADP assertions).
 * **Components:**
-  * 55 canonical records (`src/atlas/canonicalData.ts`: 53 baseline records + 2 geometry patterns in `SPECIFIED`/`PROPOSED` status) with unique IDs and 5 entity classes (Primitives, Patterns, Configurations, Implementations, Evidence).
+  * 56 canonical records (`src/atlas/canonicalData.ts`: 53 baseline records + 2 geometry patterns + `pat-visual-analytical-discovery` in `SPECIFIED`/`PROPOSED` status) with unique IDs and 5 entity classes (Primitives, Patterns, Configurations, Implementations, Evidence).
   * Knowledge graph engine (`src/atlas/graphEngine.ts`) with zero dangling edges and validated edge constraints.
   * Retrieval and Composition engine (`src/atlas/retrievalEngine.ts`) enforcing hard constraints, conflict suppression, epistemic provenance labeling (`HEURISTIC_MATCH_ONLY`), and explicit Knowledge Gap accounting.
   * Normative and Human Factors Guidance (NHFG) integration layer (ISO 9241-110, anti-conflation safeguards).

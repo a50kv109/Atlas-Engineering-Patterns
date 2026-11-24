@@ -52,7 +52,7 @@ The architecture decouples:
 
 ### 3.1 Canonical Data Layer (`src/atlas/canonicalData.ts`)
 
-The canonical data layer is the single source of truth for all established engineering knowledge in the repository. It defines 55 canonical records (53 vetted baseline records + 2 extracted geometry stand patterns in `SPECIFIED`/`PROPOSED` status) across five distinct entity types:
+The canonical data layer is the single source of truth for all established engineering knowledge in the repository. It defines 56 canonical records (53 vetted baseline records + 2 geometry stand patterns + `pat-visual-analytical-discovery` in `SPECIFIED`/`PROPOSED` status) across five distinct entity types:
 - **Primitives (`prim-*`)**: Scrolling time-series strips, calibrated gauge dials, emergency e-stop banners, bounded numeric steppers, coordinate crosshair canvases, state annunciator matrices, asymmetric split console layouts, and multichannel spectrographic waterfalls.
 - **Patterns (`pat-*`)**: Calibrated multi-sensor telemetry consoles, guided student experiment steppers, high-rate signal inspections, dual-operator safety interlocks, multi-screen synced overview/drilldown consoles, graceful hardware drift alerting, consistent editor anatomy, and Deterministic Reasoning Anchor (DRA).
 - **Stand Configurations (`cfg-*`)**: Subsonic educational wind tunnels, continuous research chemostat bioreactors, and pulsed high-voltage testbeds.
@@ -96,7 +96,7 @@ An automated evaluation framework running 12 formal criteria covering domain bou
 
 | Subsystem | Implemented & Verified | Limitations & Honest Status |
 | :--- | :--- | :--- |
-| **Canonical Records** | 55 typed records with stable IDs | Stored in in-memory TypeScript module; database-free. |
+| **Canonical Records** | 56 typed records with stable IDs | Stored in in-memory TypeScript module; database-free. |
 | **Graph Construction** | Dynamic edge extraction, typed validation | In-memory graph; graph query language (e.g. Cypher) not implemented. |
 | **Retrieval Engine** | Deterministic rule-based scoring & gap detection | Heuristic scoring formula; ML/LLM-based semantic interpretation is optional. |
 | **Live Stand Preview** | Canvas 2D waveform buffer & parameter controls | Interactive client-side simulation; real DAQ requires hardware WebSocket bridge. |

@@ -210,7 +210,7 @@ function runGeometryPatternTests() {
 
   // 3. RetrievalEngine & IngestionEngine Compatibility + Backward Compatibility
   console.log('\n--- 3. Retrieval, Ingestion & Backward Compatibility ---');
-  assert(ALL_CANONICAL_ENTITIES.length === 55, `Backward compatibility: 53 baseline + 2 geometry patterns = 55 entities (found ${ALL_CANONICAL_ENTITIES.length})`);
+  assert(ALL_CANONICAL_ENTITIES.length === 56, `Backward compatibility: 53 baseline + 2 geometry patterns + 1 VADP pattern = 56 entities (found ${ALL_CANONICAL_ENTITIES.length})`);
 
   const retrieval = new RetrievalEngine(graph);
   const geoSolution = retrieval.composeSolution({

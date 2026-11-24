@@ -52,5 +52,5 @@ Stage G delivers the visual and interactive interface for the **Normative & Huma
   - Standard compliance honesty disclosure (`CONFORMANCE_NOT_ESTABLISHED`).
 
 ### 3.4 Registry Integrity Verification (`NhfgView` -> Validation)
-- Real-time audit of the NHFG layer against the 55 canonical Atlas records.
+- Real-time audit of the NHFG layer against the 56 canonical Atlas records.
 - Guarantees 0 broken references, 0 phantom pattern IDs, 0 illegal status combinations, and zero entity bloat in core.
