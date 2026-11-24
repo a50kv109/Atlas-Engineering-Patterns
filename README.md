@@ -174,7 +174,25 @@ For complete documentation indexes, see [docs/README.md](docs/README.md) and [do
 
 ---
 
-## 10. Current Limitations & Factual Safeguards
+## 10. Related Research & Mathematical Reasoning Tools
+
+- **[Universal Mathematical Formula Passport (UMFP)](https://github.com/a50kv109/universal-Mathematical-formula-Passport)** *(External Research Tool / Independent Repository — `0.1.x` Pre-release)*
+  - **Role & Complementarity with Atlas**: While **Atlas Engineering Patterns** helps engineers and AI agents organize laboratory stand interface solutions (`pat-*`, `prim-*`, constraints, layout composition, and evidence boundaries), **UMFP** is an independent, deterministic TypeScript tool for structured pre-analysis of mathematical expressions and generating a `FormulaPassport`.
+  - **Key Capabilities Described in UMFP**:
+    - Separates original surface notation from normalized structure (`RAW AST` / `NORMALIZED AST`).
+    - Identifies structural mathematical constructs (e.g., fractions, radicals, indexed sums/products, matrices, integrals, limits).
+    - Separates free and bound variables with lexical scope tracking.
+    - Tracks provenance of number-domain requirements (`requested`, `required`, `effective`).
+    - Surfaces constraints, ambiguities, and diagnostic states (`UNKNOWN`, `NUMBER_DOMAIN_CONFLICT`, constant vs. variable disambiguation).
+    - Compares mathematical expressions while distinguishing proven canonical identity, numerical refutation, numerical support, and uncertainty (`unknown` / `not_applicable`).
+  - **Intended Usage for AI Agents**: Useful as an optional external structural grounding layer when an engineering, geometric, or research stand task involves parsing formulas, variables, or domain constraints prior to interface composition.
+  - **Strict Scope & Boundary Safeguards**:
+    - UMFP is a **standalone external repository** (`Related Research Tool / External Mathematical Reasoning Resource`), not a canonical Atlas entity, runtime dependency, or built-in automated call in Atlas.
+    - UMFP is **not** a Computer Algebra System (CAS), an automated theorem prover, or a universal STEM domain classifier (`domains` in `0.1.x` are restricted to `ALGEBRA | GEOMETRY | UNKNOWN`). Structural recognition of a formula does **not** constitute proof of its mathematical truth.
+
+---
+
+## 11. Current Limitations & Factual Safeguards
 
 1. **No Software-Only Safety Certification**:
    - The interface components (such as `prim-emergency-estop-banner` and `pat-dual-operator-safety-interlock`) are designed to participate in supervisory control loops alongside physical hardware (e-stop buttons, safety relays, enclosure interlocks).
@@ -186,7 +204,7 @@ For complete documentation indexes, see [docs/README.md](docs/README.md) and [do
 
 ---
 
-## 11. Roadmap
+## 12. Roadmap
 
 - **Stage 1**: GitHub publication, documentation transparency, and test suite reproducibility (**Current Stage**).
 - **Stage 2**: Independent inspection and refinement of existing canonical records (**In Progress**).
@@ -200,7 +218,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for full details.
 
 ---
 
-## 12. Contributing
+## 13. Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting new primitives, patterns, configurations, and empirical evidence.
 
@@ -208,7 +226,7 @@ All new proposals are treated as candidates until validated and reviewed.
 
 ---
 
-## 13. License
+## 14. License
 
 **License Status**: Not yet assigned.
 

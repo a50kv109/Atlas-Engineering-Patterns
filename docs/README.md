@@ -1,7 +1,7 @@
 # Index of Project Documentation
 
 **Status:** `PRELIMINARY`  
-**Last Updated:** 2026-10-20  
+**Last Updated:** 2026-11-23  
 **Scope:** Navigation hub for all technical documentation, architectural specifications, implementation reports, and integration audits in the repository.
 
 ---
@@ -42,3 +42,6 @@
 ## Category 8: Roadmap and Project Status
 * [PROJECT_STATUS.md](PROJECT_STATUS.md) — Current implementation baseline, preliminary integration designs, and open questions (`PRELIMINARY`)
 * [ROADMAP.md](ROADMAP.md) — Project roadmap (`PRELIMINARY`)
+
+## Category 9: Related Research & External Mathematical Tools
+* [Universal Mathematical Formula Passport (UMFP)](https://github.com/a50kv109/universal-Mathematical-formula-Passport) — Independent deterministic TypeScript tool (`0.1.x` research release) for structured analysis of mathematical expressions (`RAW AST` / `NORMALIZED AST`, structural constructs, free/bound variables, number-domain provenance, constraints, and expression comparison). External complementary resource for AI agents; not part of Atlas canonical entities or runtime (`EXTERNAL RESOURCE`).

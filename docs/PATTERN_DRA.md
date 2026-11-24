@@ -53,3 +53,16 @@ A core tenet of DRA and Atlas × SOL-2 integration is that **relevance is not pr
 ### Disadvantages:
 - **Metacognitive Overhead**: Requires structured formalization steps before accepting composition results.
 - **Requires Formalizable Fragments**: Cannot deterministically verify vague qualitative requirements without explicit ontological representation.
+
+---
+
+## 5. External Tooling Guidance: Mathematical Formula Analysis (UMFP)
+
+When a stand-engineering task requires analyzing a mathematical formula, its structural components, free/bound variables, number-domain provenance, constraints, or comparing expressions, an AI agent may consult **[Universal Mathematical Formula Passport (UMFP)](https://github.com/a50kv109/universal-Mathematical-formula-Passport)** as an **independent, external specialized tool** (Atlas does not bundle UMFP source code or invoke it automatically).
+
+### Recommended Agent Sequence:
+1. Extract the mathematical expression from the engineering or stand-design task.
+2. When structural grounding is warranted, inspect or parse the expression externally via UMFP to obtain a `FormulaPassport` (`RAW AST` / `NORMALIZED AST`, structural constructs, free vs. bound variables, and `requested` / `required` / `effective` number-domain provenance).
+3. Review the resulting `FormulaPassport`, paying explicit attention to constraints, ambiguities, `UNKNOWN` classifications, and diagnostic notices.
+4. Continue engineering reasoning and Atlas pattern composition with those explicit structural boundaries preserved.
+5. **Do not treat structural analysis results as mathematical proof:** UMFP is not a CAS or automated theorem prover, and structural formula recognition never establishes mathematical truth.
