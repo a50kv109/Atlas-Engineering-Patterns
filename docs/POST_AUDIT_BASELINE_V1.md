@@ -4,8 +4,9 @@
 **Audit Date:** 2026-11-27  
 **Repository Name:** `Atlas-Engineering-Patterns` (`atlas-engineering-patterns@1.0.0`)  
 **Repository URL:** `https://github.com/a50kv109/Atlas-Engineering-Patterns`  
-**Audited GitHub Reference:** Branch `main`, commit `660437b9cd3fc6004ff3898482d32fc79d322a8c` (`2026-11-27T13:11:09Z`)  
-**Audited Local Environment:** Google AI Studio workspace (`/app/applet`, no local `.git` repository metadata)
+**Confirmed GitHub Reference:** Branch `main`, commit `1e9234a4ef010550e9bf9477efc014acf9616eb9` (`2026-11-27T13:54:40Z`; `docs: update project documentation and repo hygiene`)  
+**Pre-Sync Historical Reference:** Branch `main`, commit `660437b9cd3fc6004ff3898482d32fc79d322a8c` (`2026-11-27T13:11:09Z`)  
+**Workspace Environment:** Google AI Studio workspace (`/app/applet`, synchronized via external GitHub workflow)
 
 ---
 
@@ -20,42 +21,47 @@
 
 ## B. Verified GitHub State
 
-GitHub state was inspected directly via the GitHub REST API (`api.github.com`) and raw file endpoints (`raw.githubusercontent.com`) against `a50kv109/Atlas-Engineering-Patterns`.
+GitHub state was verified via the GitHub REST API (`api.github.com`) against `a50kv109/Atlas-Engineering-Patterns`.
 
 | GitHub Dimension | Observed Remote State |
 | :--- | :--- |
 | **Default / Target Branch** | `main` |
-| **All Remote Branches** | `main` (`660437b9cd3fc6004ff3898482d32fc79d322a8c`), `docs/stand-design-principles` (`9816f18115536a0deb0e0310e6b9727978be9f30`) |
-| **Latest Commit on `main`** | `660437b9cd3fc6004ff3898482d32fc79d322a8c` — `docs: update architecture documentation` (`2026-11-27T13:11:09Z`) |
+| **All Remote Branches** | `main` (`1e9234a4ef010550e9bf9477efc014acf9616eb9`), `docs/stand-design-principles` (`9816f18115536a0deb0e0310e6b9727978be9f30`) |
+| **Latest Confirmed Commit on `main`** | `1e9234a4ef010550e9bf9477efc014acf9616eb9` — `docs: update project documentation and repo hygiene` (`2026-11-27T13:54:40Z`; parent `660437b9cd3fc6004ff3898482d32fc79d322a8c`) |
 | **Pull Requests (`state=all`)** | PR `#1` (`docs: add stand interface design principles`, `docs/stand-design-principles -> main`) — **CLOSED / MERGED** at `2026-11-27T13:07:13Z` via merge commit `8186e602babb39790bc5e44b2de160e664232bc5` |
-| **PR for Post-Audit Corrections** | **Absent** (no open or closed PR exists for the 4 audit-modified files or subsequent corrections) |
-| **Synchronization Status** | **NOT SYNCHRONIZED** — local AI Studio edits are ahead of GitHub `main` |
-| **Local `.git` Working Tree Status** | **Unavailable in sandbox** (`git status` returns `fatal: not a git repository`); branch switching, commits, `git rm --cached`, and PR creation cannot be executed from bash inside AI Studio |
-| **Tracked Python Bytecode on `main`** | **13 entries actively tracked** in GitHub tree (`pattern_lens/__pycache__/*` and `tests_pattern_lens/__pycache__/*`) |
+| **Baseline v1 Delivery Method** | **Direct commit to `main`** (`1e9234a4ef010550e9bf9477efc014acf9616eb9`); no separate PR was created for the Post-Audit Baseline v1 synchronization |
+| **Synchronization Status** | **SYNCHRONIZED** — local audit fixes and baseline documents were published directly to GitHub `main` (`1e9234a4ef010550e9bf9477efc014acf9616eb9`) |
+| **Tracked Python Bytecode on `main`** | **0 entries** — previously tracked `.pyc` files under `pattern_lens/__pycache__/` and `tests_pattern_lens/__pycache__/` were removed in commit `1e9234a4ef010550e9bf9477efc014acf9616eb9`; current `main` tree contains no `*.pyc` files or `__pycache__` directories |
 
 ---
 
 ## C. Audit Verification
 
-### 1. Status of the Four Previously Modified Audit Files
+### 1. Synchronization Record of Audited Documentation & Hygiene Files
 
-| File | Local Exists? | GitHub `main` Exists? | Content Identical? | Included in Latest Commit (`660437b9cd3f`)? | Correspondence to Audit Corrections |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| `docs/README.md` | Yes | Yes (`HTTP 200`) | **No** | No (pre-audit version on `main`) | Local removes duplicate `STAND_INTERFACE_DESIGN_PRINCIPLES.md` link and indexes audit reports; GitHub `main` still contains the duplicate link |
-| `.gitignore` | Yes | Yes (`HTTP 200`) | **No** | No (pre-audit version on `main`) | Local adds `__pycache__/` and `*.py[cod]`; GitHub `main` lacks these rules and still tracks 13 `.pyc` / `__pycache__` entries |
-| `docs/STAND_INTERFACE_DESIGN_PRINCIPLES.md` | Yes | Yes (`HTTP 200`) | **No** | No (pre-audit version on `main`) | Local clarifies semantic separation in Section 6 (`P-01` vs `pat-reference-experiment-dual-workspace` vs VADP); GitHub `main` lacks this clarification |
-| `docs/REPOSITORY_AUDIT_REPORT.md` | Yes | **No (`HTTP 404`)** | **No** | **No** | Exists only in local AI Studio workspace; not yet pushed to GitHub |
+*(Historical note: prior to commit `1e9234a4ef010550e9bf9477efc014acf9616eb9`, GitHub `main` at `660437b9cd3f` held pre-audit versions of `docs/README.md`, `.gitignore`, and `docs/STAND_INTERFACE_DESIGN_PRINCIPLES.md`, and lacked `docs/REPOSITORY_AUDIT_REPORT.md` and `docs/POST_AUDIT_BASELINE_V1.md`. All 7 target files were synchronized in `1e9234a4ef010550e9bf9477efc014acf9616eb9`.)*
 
-*(Additional local-only runtime lockfile observed: `bun.lock` exists locally and is absent from GitHub `main`.)*
+| File | Pre-Sync State (`660437b9cd3f`) | Synchronized State (`1e9234a4ef010550e9bf9477efc014acf9616eb9`) | Change Summary |
+| :--- | :--- | :--- | :--- |
+| `README.md` | Placeholder clone URL | **Published on `main` (`modified`)** | Updated clone URL to `https://github.com/a50kv109/Atlas-Engineering-Patterns.git` |
+| `.gitignore` | Lacked Python cache ignore rules | **Published on `main` (`modified`)** | Added `__pycache__/` and `*.py[cod]` |
+| `docs/README.md` | Contained duplicate `STAND_INTERFACE_DESIGN_PRINCIPLES.md` link | **Published on `main` (`modified`)** | Removed duplicate link; indexed `REPOSITORY_AUDIT_REPORT.md` and `POST_AUDIT_BASELINE_V1.md` |
+| `docs/PROJECT_STATUS.md` | Contradicted Section 1B regarding `pattern_lens/aam_gateway.py` | **Published on `main` (`modified`)** | Reconciled Sections 2A & 4 with implemented `aam_gateway.py` v0 baseline and 34/34 tests |
+| `docs/STAND_INTERFACE_DESIGN_PRINCIPLES.md` | Lacked explicit 3-level semantic separation in Section 6 | **Published on `main` (`modified`)** | Separated `P-01` vs `pat-reference-experiment-dual-workspace` vs VADP |
+| `docs/REPOSITORY_AUDIT_REPORT.md` | Absent (`HTTP 404`) | **Published on `main` (`added`)** | Published audit report (updated in this pass with post-sync confirmation) |
+| `docs/POST_AUDIT_BASELINE_V1.md` | Absent (`HTTP 404`) | **Published on `main` (`added`)** | Published baseline report (updated in this pass with post-sync confirmation) |
+
+*(Additional local-only runtime lockfile `bun.lock` remains outside the published repository tree.)*
 
 ### 2. Verification of `docs/REPOSITORY_AUDIT_REPORT.md`
 
-Evaluation of the prior audit report against actual workspace and remote evidence:
-* **Accurate Test Claims:** The reported `114/114` TypeScript assertions, `34/34` Python tests, zero `tsc --noEmit` errors, and clean `vite build` were independently re-executed and confirmed in the current workspace.
-* **Calibration Gaps Identified & Corrected in This Baseline Review:**
-  1. The prior report omitted the `package.json` version (`1.0.0`) and GitHub `main` commit SHA (`660437b9cd3f`), which were added in this pass.
-  2. Its original summary (`ACCEPTED WITH CONTROLLED CORRECTIONS`) and `AUDIT-02 ... Resolved` overstated completion because GitHub sync had not happened and adding `.gitignore` rules does **not** untrack the 13 `__pycache__/*.pyc` entries already committed on GitHub `main`. Both were calibrated to reflect `LOCAL WORKSPACE CORRECTIONS APPLIED — GITHUB SYNC PENDING` and `Partially Resolved`.
-  3. Explicitly noted checks not performed (GitHub remote sync prior to this baseline check, browser E2E automation, live hardware DAQ WebSocket testing).
+Evaluation of the audit report across the pre-sync review and current post-sync reconciliation:
+* **Accurate Test Claims:** The reported `114/114` TypeScript assertions, `34/34` Python tests, zero `tsc --noEmit` errors, and clean `vite build` were independently re-executed and confirmed.
+* **Historical Pre-Sync Calibration (Resolved):**
+  1. The initial draft omitted `package.json` version (`1.0.0`) and pre-sync GitHub `main` SHA (`660437b9cd3f`); both were added before synchronization.
+  2. The pre-sync pass explicitly recorded `LOCAL WORKSPACE CORRECTIONS APPLIED — GITHUB SYNC PENDING` and `Partially Resolved` for `AUDIT-02` until the tracked `.pyc` entries were deleted in Git.
+  3. Following direct commit `1e9234a4ef010550e9bf9477efc014acf9616eb9` on `main`, both GitHub synchronization (`BL-01`) and removal of tracked Python bytecode (`BL-02` / `AUDIT-02`) are verified complete.
+  4. Non-executed runtime checks remain explicitly scoped (browser E2E automation and live hardware DAQ WebSocket testing).
 
 ### 3. Independent Test, Lint, Build & Link Verification
 
@@ -74,7 +80,8 @@ Executed directly in `/app/applet`:
 | **TypeScript Typecheck / Lint** | `npm run lint` (`tsc --noEmit`) | `0 errors` | **VERIFIED** |
 | **Production Build** | `npm run build` (`vite build`) | `1675 modules`, built cleanly | **VERIFIED** |
 | **Local Markdown Links** | Python scan of all `86` `.md` files | `0` broken links in Atlas root/`docs/`/`artifacts/`; `11` broken relative links inside vendored `aam_kernels/AAM-Language-Kernels-main/` | **VERIFIED** |
-| **GitHub Sync & Live E2E UI** | GitHub API inspection / Browser E2E | GitHub `main` behind local edits; Playwright/Cypress E2E not configured | **NOT SYNCHRONIZED / NOT RUN** |
+| **GitHub `main` Sync & Bytecode Cleanup** | GitHub API inspection (`1e9234a4ef010550e9bf9477efc014acf9616eb9`) | All 7 target files synchronized directly to `main`; `0` `*.pyc` / `__pycache__` entries on `main` | **VERIFIED** |
+| **Live Browser E2E UI** | Playwright / Cypress | Not configured / not executed | **NOT RUN** |
 
 ---
 
@@ -157,8 +164,8 @@ Evaluating an autonomous AI agent arriving with only the GitHub URL and no prior
 
 | ID | Severity | Location | Finding & Evidence | Action / Status | Confidence |
 | :--- | :---: | :--- | :--- | :--- | :---: |
-| **BL-01** | **HIGH** | GitHub `main` (`660437b9cd3f`) vs `/app/applet` | Local audit corrections (`docs/README.md`, `.gitignore`, `STAND_INTERFACE_DESIGN_PRINCIPLES.md`, `REPOSITORY_AUDIT_REPORT.md`) and this baseline update are **not synchronized with GitHub**; no PR exists yet. | Pending external GitHub sync via branch + Pull Request (`.git` absent in AI Studio sandbox). | **High** |
-| **BL-02** | **HIGH** | GitHub tree `pattern_lens/__pycache__/`, `tests_pattern_lens/__pycache__/` | 13 Python bytecode entries remain tracked in Git on `main`. `.gitignore` alone will not untrack them. | During Git sync, run `git rm -r --cached pattern_lens/__pycache__ tests_pattern_lens/__pycache__` before committing. | **High** |
+| **BL-01** | **HIGH** | GitHub `main` (`1e9234a4ef010550e9bf9477efc014acf9616eb9`) | *(Historical pre-sync gap at `660437b9cd3f`)* Local audit corrections (`README.md`, `.gitignore`, `docs/README.md`, `docs/PROJECT_STATUS.md`, `docs/STAND_INTERFACE_DESIGN_PRINCIPLES.md`, `docs/REPOSITORY_AUDIT_REPORT.md`, `docs/POST_AUDIT_BASELINE_V1.md`) had not yet been pushed to GitHub. | **RESOLVED** — Synchronized directly to GitHub `main` in commit `1e9234a4ef010550e9bf9477efc014acf9616eb9` (`docs: update project documentation and repo hygiene`); no separate PR created. | **High** |
+| **BL-02** | **HIGH** | GitHub tree `pattern_lens/__pycache__/`, `tests_pattern_lens/__pycache__/` | *(Historical pre-sync gap at `660437b9cd3f`)* Tracked Python bytecode entries remained in Git alongside missing ignore rules. | **RESOLVED** — `.gitignore` rules (`__pycache__/`, `*.py[cod]`) applied and all previously tracked `.cpython-310.pyc` / `__pycache__` entries removed from `main` in commit `1e9234a4ef010550e9bf9477efc014acf9616eb9` (verified `0` cache entries in `main` tree). | **High** |
 | **BL-03** | **MEDIUM** | `docs/PROJECT_STATUS.md` (lines 20 vs 30–40 & 63–66) | Internal contradiction claiming `pattern_lens/aam_gateway.py` was not yet implemented despite `34/34` tests passing (including 14 gateway integration tests). | **Corrected in this pass** (Sections 2 & 4 reconciled with Section 1B). | **High** |
 | **BL-04** | **MEDIUM** | `README.md` line 126 | Stale clone placeholder `https://github.com/<your-username>/atlas-engineering-patterns.git`. | **Corrected in this pass** to `https://github.com/a50kv109/Atlas-Engineering-Patterns.git`. | **High** |
 | **BL-05** | **MEDIUM** | `docs/REPOSITORY_AUDIT_REPORT.md` | Omitted audited package version / GitHub commit SHA and marked `AUDIT-02` resolved without noting pending `git rm --cached` and missing GitHub sync. | **Corrected in this pass** (calibrated metadata & statuses). | **High** |
@@ -186,9 +193,8 @@ Evaluating an autonomous AI agent arriving with only the GitHub URL and no prior
 
 ## H. Baseline Decision
 
-**Baseline Verdict:** **`Post-Audit Baseline v1` — VERIFIED LOCALLY, NOT YET ESTABLISHED AS A SYNCHRONIZED GITHUB BASELINE.**
+**Baseline Verdict:** **`Post-Audit Baseline v1` — PUBLISHED AND SYNCHRONIZED ON GITHUB `main`.**
 
-* **What IS verified:** Canonical dataset integrity (`56/56` unique records, `0` dangling edges, `0` type violations), full TypeScript test suite (`114/114`), full Python test suite (`34/34`), `tsc --noEmit` (`0` errors), `vite build`, internal documentation consistency, and all local audit fixes.
-* **Exact unresolved conditions blocking final GitHub Baseline sign-off:**
-  1. Synchronize local changes (`README.md`, `.gitignore`, `docs/README.md`, `docs/PROJECT_STATUS.md`, `docs/STAND_INTERFACE_DESIGN_PRINCIPLES.md`, `docs/REPOSITORY_AUDIT_REPORT.md`, and `docs/POST_AUDIT_BASELINE_V1.md`) to GitHub on a dedicated branch via Pull Request and merge into `main`.
-  2. Untrack the 13 already-committed Python cache entries from Git index (`git rm -r --cached pattern_lens/__pycache__ tests_pattern_lens/__pycache__`) so `.gitignore` takes full effect on GitHub.
+* **Confirmed GitHub Baseline Commit:** `1e9234a4ef010550e9bf9477efc014acf9616eb9` (`docs: update project documentation and repo hygiene`, committed directly to `main` at `2026-11-27T13:54:40Z`; no separate PR created).
+* **Verified Baseline State:** Canonical dataset integrity (`56/56` unique records, `0` dangling edges, `0` type violations), full TypeScript test suite (`114/114`), full Python test suite (`34/34`), `tsc --noEmit` (`0` errors), `vite build`, internal documentation consistency, synchronization of all audited documentation and `.gitignore` updates to `main`, and complete removal of tracked `__pycache__` / `*.pyc` artifacts from GitHub `main` (`0` entries remaining).
+* **Deferred Non-Blocking Items for Subsequent Stages:** `BL-06` (compiled `docs/CATALOG.md` and `docs/TEST_TRACEABILITY_MATRIX.md`) and `BL-07` (`src/atlas/retrievalEngine.ts` multi-word tag-matching asymmetry).
