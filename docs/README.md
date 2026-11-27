@@ -1,7 +1,7 @@
 # Index of Project Documentation
 
 **Status:** `PRELIMINARY`  
-**Last Updated:** 2026-11-24  
+**Last Updated:** 2026-11-27  
 **Scope:** Navigation hub for all technical documentation, architectural specifications, implementation reports, and integration audits in the repository.
 
 ---
@@ -10,6 +10,7 @@
 * [ARCHITECTURE.md](ARCHITECTURE.md) — Core system architecture and layered design (`SOURCE-CONFIRMED`)
 * [PATTERN_DRA.md](PATTERN_DRA.md) — Deterministic Reasoning Anchor (DRA) 7-stage agent reasoning specification (`SOURCE-CONFIRMED`)
 * [PATTERN_VADP.md](PATTERN_VADP.md) — Visual Analytical Discovery Pattern (VADP) 7-stage visual hypothesis & verification specification (`PROPOSED`)
+* [STAND_INTERFACE_DESIGN_PRINCIPLES.md](STAND_INTERFACE_DESIGN_PRINCIPLES.md) — Preliminary design principles for reusable stand workspaces, research interaction, provenance, and candidate extraction (`PRELIMINARY`)
 * [GEOMETRY_PATTERN_EXTRACTION.md](GEOMETRY_PATTERN_EXTRACTION.md) — Geometry Pattern Extraction principles for 2D/3D stand interfaces (`PRELIMINARY`: `SPECIFIED` + `PROPOSED` hypothesis)
 * [CROSS_REPOSITORY_AUDIT.md](CROSS_REPOSITORY_AUDIT.md) — Cross-repository audit findings and stability reports (`SOURCE-CONFIRMED`)
 * [ROADMAP.md](ROADMAP.md) — Long-term project roadmap and publication milestones (`PRELIMINARY`)
