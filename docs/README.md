@@ -8,6 +8,7 @@
 
 ## Category 1: Architecture
 * [ARCHITECTURE.md](ARCHITECTURE.md) — Core system architecture and layered design (`SOURCE-CONFIRMED`)
+* [STAND_INTERFACE_DESIGN_PRINCIPLES.md](STAND_INTERFACE_DESIGN_PRINCIPLES.md) — Stand Architecture Principles: Dual workspace, multi-window layout, core-research separation, and interactive publication workflow (`PRELIMINARY`)
 * [PATTERN_DRA.md](PATTERN_DRA.md) — Deterministic Reasoning Anchor (DRA) 7-stage agent reasoning specification (`SOURCE-CONFIRMED`)
 * [PATTERN_VADP.md](PATTERN_VADP.md) — Visual Analytical Discovery Pattern (VADP) 7-stage visual hypothesis & verification specification (`PROPOSED`)
 * [STAND_INTERFACE_DESIGN_PRINCIPLES.md](STAND_INTERFACE_DESIGN_PRINCIPLES.md) — Preliminary design principles for reusable stand workspaces, research interaction, provenance, and candidate extraction (`PRELIMINARY`)
