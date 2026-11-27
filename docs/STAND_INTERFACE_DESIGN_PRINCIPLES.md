@@ -156,16 +156,22 @@ Interface design should make the status and origin of information legible. At mi
 
 The exact status vocabulary should reuse Atlas's existing lifecycle and epistemic contracts where possible. This document does not introduce a competing status ontology.
 
-## 6. Relationship to Existing Atlas Knowledge
+## 6. Relationship to Existing Atlas Knowledge & Semantic Distinctions
 
-These principles are intentionally not submitted as new canonical patterns. Initial mapping for review:
+These principles are intentionally not submitted as new canonical patterns. To prevent conceptual conflation, note the precise boundaries between high-level architectural principles and existing Atlas canonical patterns:
+
+1. **`P-01 Dual-Workspace Principle`** defines the macro-organizational split between the **Visual / Experimental Workspace** (interacting with viewport representation/apparatus) and the **Analytical Workspace** (measurements, plots, formulas, tables, and derived indicators).
+2. **`pat-reference-experiment-dual-workspace`** addresses a more specific micro-layout mechanism: side-by-side or layered comparison of a **locked baseline reference state** versus a **mutable experimental perturbation state** with delta highlighting.
+3. **`pat-visual-analytical-discovery` (VADP)** governs the 7-stage interactive analytical workflow (System Decomposition -> Parametric Modeling -> Visual Analytics -> Pattern Detection [V-01..V-12] -> Hypothesis Formation -> Formal Verification -> Knowledge Extraction) across multi-curve or multi-representation views.
+
+Initial mapping for review:
 
 | Design principle | Likely Atlas relationship | Treatment |
 |---|---|---|
-| Dual visual / analytical workspaces | `pat-visual-analytical-discovery` and existing visual/analytical interface records | Compare and reuse; avoid duplicate pattern |
+| Dual visual / analytical workspaces | Macro-level split distinct from `pat-reference-experiment-dual-workspace` and `pat-visual-analytical-discovery` | Compare and reuse; avoid duplicate pattern |
 | Shared-state coordination | Existing synchronized multi-screen / overview-detail patterns | Check coverage and refine only if a distinct interface problem remains |
 | Adaptive multi-window workspace | Existing multi-screen patterns and layout primitives | Candidate refinement, not automatically a new canonical record |
-| Parameter exploration and synchronized plots | `pat-visual-analytical-discovery` and its primitives | Reuse VADP boundary and primitives |
+| Parameter exploration and synchronized plots | `pat-visual-analytical-discovery` (VADP) | Reuse VADP boundary and primitives |
 | Epistemic labels and provenance display | `PATTERN_DRA.md`, VADP, and existing status-display patterns | Reuse existing epistemic safeguards |
 | External publication / reproduction UI | Potential future interface-pattern candidate | Keep proposed until duplicate analysis and a concrete interface problem statement exist |
 | Interactive publication linkage | Potential future interface-pattern candidate | Keep proposed; distinguish replay, live execution, and verification |

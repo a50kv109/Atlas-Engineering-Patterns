@@ -8,10 +8,9 @@
 
 ## Category 1: Architecture
 * [ARCHITECTURE.md](ARCHITECTURE.md) — Core system architecture and layered design (`SOURCE-CONFIRMED`)
-* [STAND_INTERFACE_DESIGN_PRINCIPLES.md](STAND_INTERFACE_DESIGN_PRINCIPLES.md) — Stand Architecture Principles: Dual workspace, multi-window layout, core-research separation, and interactive publication workflow (`PRELIMINARY`)
+* [STAND_INTERFACE_DESIGN_PRINCIPLES.md](STAND_INTERFACE_DESIGN_PRINCIPLES.md) — Stand Interface Design Principles: Dual workspace, multi-window layout, core-research separation, research session provenance, and interactive publication workflow (`PRELIMINARY`)
 * [PATTERN_DRA.md](PATTERN_DRA.md) — Deterministic Reasoning Anchor (DRA) 7-stage agent reasoning specification (`SOURCE-CONFIRMED`)
 * [PATTERN_VADP.md](PATTERN_VADP.md) — Visual Analytical Discovery Pattern (VADP) 7-stage visual hypothesis & verification specification (`PROPOSED`)
-* [STAND_INTERFACE_DESIGN_PRINCIPLES.md](STAND_INTERFACE_DESIGN_PRINCIPLES.md) — Preliminary design principles for reusable stand workspaces, research interaction, provenance, and candidate extraction (`PRELIMINARY`)
 * [GEOMETRY_PATTERN_EXTRACTION.md](GEOMETRY_PATTERN_EXTRACTION.md) — Geometry Pattern Extraction principles for 2D/3D stand interfaces (`PRELIMINARY`: `SPECIFIED` + `PROPOSED` hypothesis)
 * [CROSS_REPOSITORY_AUDIT.md](CROSS_REPOSITORY_AUDIT.md) — Cross-repository audit findings and stability reports (`SOURCE-CONFIRMED`)
 * [ROADMAP.md](ROADMAP.md) — Long-term project roadmap and publication milestones (`PRELIMINARY`)
@@ -39,6 +38,8 @@
 * [NHFG_BASELINE_AUDIT.md](NHFG_BASELINE_AUDIT.md) — NHFG baseline audit report (`SOURCE-CONFIRMED`)
 
 ## Category 7: Testing and Audit Reports
+* [POST_AUDIT_BASELINE_V1.md](POST_AUDIT_BASELINE_V1.md) — Post-Audit Baseline v1: GitHub synchronization check, documentation & canonical integrity, and AI-agent usability review (`SOURCE-CONFIRMED`)
+* [REPOSITORY_AUDIT_REPORT.md](REPOSITORY_AUDIT_REPORT.md) — Comprehensive repository audit report, findings classification, and corrections log (`SOURCE-CONFIRMED`)
 * [NHFG_IMPLEMENTATION_REPORT.md](NHFG_IMPLEMENTATION_REPORT.md) — NHFG implementation report (`SOURCE-CONFIRMED`)
 * [NHFG_UI_SPECIFICATION.md](NHFG_UI_SPECIFICATION.md) — NHFG UI specification (`SOURCE-CONFIRMED`)
 

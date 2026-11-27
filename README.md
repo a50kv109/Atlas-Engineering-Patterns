@@ -123,8 +123,8 @@ The included laboratory workbench UI provides:
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/atlas-engineering-patterns.git
-cd atlas-engineering-patterns
+git clone https://github.com/a50kv109/Atlas-Engineering-Patterns.git
+cd Atlas-Engineering-Patterns
 
 # Install verified dependencies
 npm install
